@@ -1,0 +1,46 @@
+{
+  "type": "function",
+  "function": {
+    "name": "send_api_request",
+    "description": "send the API request to get execute an action",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "description": "The HTTP method to use"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL to send the request to"
+        },
+        "headers": {
+          "type": "string",
+          "description": "The headers to send with the request. It should be a json object"
+        },
+        "params": {
+          "type": "string",
+          "description": "The query parameters to send with the request. It should be a json object"
+        },
+        "data": {
+          "type": "string",
+          "description": "The data to send with the request. It should be a json object"
+        },
+        "body": {
+          "type": "string",
+          "description": "The body to send with the request. It should be a json object"
+        }
+      },
+      "required": [
+        "method",
+        "url"
+      ]
+    }
+  }
+}
