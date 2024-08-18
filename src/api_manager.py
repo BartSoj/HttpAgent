@@ -1,6 +1,6 @@
 import requests
-from urllib.parse import urlparse
 import logging
+import tldextract
 from auth_manager import AuthManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class APIManager:
-    def __init__(self, api_clients_path):
+    def __init__(self, api_clients_path, api_tokens_path):
         self.auths = {}
         self.token_manager = None
-        if api_clients_path:
-            self.token_manager = AuthManager(api_clients_path)
+        if api_clients_path and api_tokens_path:
+            self.token_manager = AuthManager(api_clients_path, api_tokens_path)
             self._load_auths()
 
     def _load_auths(self):
@@ -36,7 +36,7 @@ class APIManager:
         :return: A tuple containing (status_code, response_text)
         """
         try:
-            auth_name = urlparse(url).netloc
+            auth_name = tldextract.extract(url).domain
             auth = self.auths.get(auth_name)
             response = requests.request(
                 method=method,

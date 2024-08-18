@@ -16,6 +16,7 @@ class AssistantBuilder:
         self.instructions = None
         self.temperature = None
         self.api_clients_path = None
+        self.api_tokens_path = None
         self.function_paths = None
         self.file_search_vector_store_ids = None
 
@@ -39,6 +40,10 @@ class AssistantBuilder:
         self.api_clients_path = api_clients_path
         return self
 
+    def set_api_tokens_path(self, api_tokens_path):
+        self.api_tokens_path = api_tokens_path
+        return self
+
     def set_function_paths(self, function_paths):
         self.function_paths = function_paths
         return self
@@ -54,6 +59,7 @@ class AssistantBuilder:
                          self.instructions,
                          self.temperature,
                          self.api_clients_path,
+                         self.api_tokens_path,
                          self.function_paths,
                          self.file_search_vector_store_ids)
 
@@ -65,13 +71,14 @@ class Assistant:
                  instructions=None,
                  temperature=None,
                  api_clients_path=None,
+                 api_tokens_path=None,
                  function_paths=None,
                  file_search_vector_store_ids=None):
 
         self.openai_client = OpenAIClient().get_client()
 
         self.name = name
-        self.api_manager = APIManager(api_clients_path)
+        self.api_manager = APIManager(api_clients_path, api_tokens_path)
 
         tools = []
         tools_resources = {}

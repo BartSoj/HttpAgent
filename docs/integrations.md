@@ -1,7 +1,16 @@
 APIs included in mindAI:
 
-- Spotify Web API for music playback
-- Gmail API for email management
+- Google Calendar
+- Google Chat
+- Google Docs
+- Google Drive
+- Gmail
+- Google Contacts
+- Google Apps Script
+- Google Sheets
+- Google Slides
+- Google Tasks
+- Spotify Web API
 
 important APIs for integration:
 
@@ -9,7 +18,7 @@ important APIs for integration:
 - Tapo for light and smart devices control
 - some api to set alarms and timers
 - api to get screenshot from user's devices
-- apis to google products, these include: google calendar, google maps, youtube, keep, contacts
+- apis to google products, these include: google maps, youtube, keep, photos, meet
 - apis to apple products, these include: health and fitness, notes, calendar, reminders
 
 other APIs for future integration:
@@ -19,7 +28,7 @@ other APIs for future integration:
 - social: linkedin, whatsapp
 - business: teams, slack, github
 - wellness: mental future or other meditation
-- education: Canvas
+- education: Canvas LMS
 
 files with openapi specification can be found among other in the following pages:
 
