@@ -19,10 +19,6 @@ class APIManager:
         self.auths = self.token_manager.get_auths()
         logger.info(f"Loaded {len(self.auths)} authentications")
 
-    def cleanup(self):
-        if self.token_manager:
-            self.token_manager.save_auths(self.auths)
-
     def send_request(self, method, url, headers=None, params=None, data=None, json=None):
         """
         Send an HTTP request with the given parameters.
@@ -57,4 +53,9 @@ class APIManager:
             logger.info(log_message)
             return response.status_code, response.text
         except requests.RequestException as e:
+            logger.error(f"Failed to send request to {url}: {e}")
             return None, str(e)
+
+    def close(self):
+        if self.token_manager:
+            self.token_manager.save_auths(self.auths)

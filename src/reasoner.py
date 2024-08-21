@@ -2,13 +2,16 @@ import json
 from openai_client import OpenAIClient
 import logging
 
+from context_manager import ContextManager
+from memory_manager import MemoryManager
+from schedule_manager import ScheduleManager
 from api_manager import APIManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-class AssistantBuilder:
+class ReasonerBuilder:
     def __init__(self, name):
         self.name = name
         self.model = "gpt-4o-mini"
@@ -53,18 +56,18 @@ class AssistantBuilder:
         return self
 
     def build(self):
-        return Assistant(self.name,
-                         self.model,
-                         self.description,
-                         self.instructions,
-                         self.temperature,
-                         self.api_clients_path,
-                         self.api_tokens_path,
-                         self.function_paths,
-                         self.file_search_vector_store_ids)
+        return Reasoner(self.name,
+                        self.model,
+                        self.description,
+                        self.instructions,
+                        self.temperature,
+                        self.api_clients_path,
+                        self.api_tokens_path,
+                        self.function_paths,
+                        self.file_search_vector_store_ids)
 
 
-class Assistant:
+class Reasoner:
     def __init__(self, name,
                  model="gpt-4o-mini",
                  description=None,
@@ -78,6 +81,9 @@ class Assistant:
         self.openai_client = OpenAIClient().get_client()
 
         self.name = name
+        self.context_manager = ContextManager()
+        self.memory_manager = MemoryManager()
+        self.schedule_manager = ScheduleManager()
         self.api_manager = APIManager(api_clients_path, api_tokens_path)
 
         tools = []
@@ -121,15 +127,11 @@ class Assistant:
         body = self._parse_request_argument(function_arguments.get("body"))
         return self.api_manager.send_request(method, url, headers, params, data, body)
 
-    def print_messages(self):
-        messages = list(self.openai_client.beta.threads.messages.list(thread_id=self.thread.id))
-        for message in reversed(messages):
-            role = message.role.capitalize()
-            content = message.content[0].text.value
-            print(f"\n## {role}")
-            print("-" * (len(role) + 3))
-            print(content)
-            print()
+    def add_schedule_form_json(self, json_schedule):
+        schedule_arguments = json.loads(json_schedule)
+        time = schedule_arguments["time"]
+        content = schedule_arguments["content"]
+        self.schedule_manager.add_schedule(time, content)
 
     def handle_actions(self, run):
         tool_outputs = []
@@ -143,6 +145,13 @@ class Assistant:
                         "output": f"Status code: {status}, Response text: {text}"
                     }
                 )
+            elif tool.function.name == "save_memory":
+                memory = json.loads(tool.function.arguments)["memory"]
+                self.memory_manager.save_memory(memory)
+                tool_outputs.append({"tool_call_id": tool.id, "output": "Memory saved."})
+            elif tool.function.name == "add_schedule":
+                self.add_schedule_form_json(tool.function.arguments)
+                tool_outputs.append({"tool_call_id": tool.id, "output": "Schedule added."})
 
         if tool_outputs:
             try:
@@ -158,11 +167,18 @@ class Assistant:
 
         return run
 
-    def send_message(self, content):
+    def send_message(self, message_type, user_message):
+        content = {
+            "type": message_type,
+            "context": self.context_manager.get_context(),
+            "memory": self.memory_manager.get_memory(),
+            "content": user_message
+        }
+
         message = self.openai_client.beta.threads.messages.create(
             thread_id=self.thread.id,
             role="user",
-            content=content
+            content=json.dumps(content)
         )
 
         run = self.openai_client.beta.threads.runs.create_and_poll(
@@ -171,27 +187,14 @@ class Assistant:
 
         return run
 
+    def list_messages(self):
+        messages = list(self.openai_client.beta.threads.messages.list(thread_id=self.thread.id))
+        return messages
+
     def close(self):
         self.openai_client.beta.assistants.delete(assistant_id=self.assistant.id)
         self.openai_client.beta.threads.delete(thread_id=self.thread.id)
-        self.api_manager.cleanup()
-
-    def run(self):
-        try:
-            while True:
-                user_input = input("You: ")
-                if user_input == "exit":
-                    break
-
-                run = self.send_message(user_input)
-
-                while run.required_action:
-                    run = self.handle_actions(run)
-
-                if run.status == 'completed':
-                    self.print_messages()
-                else:
-                    logger.error("actions executed, but run is not completed")
-                    self.print_messages()
-        finally:
-            self.close()
+        self.context_manager.close()
+        self.memory_manager.close()
+        self.schedule_manager.close()
+        self.api_manager.close()
