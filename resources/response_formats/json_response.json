@@ -1,0 +1,25 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "json_response",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The content message to send with the response. It should be a json object"
+        },
+        "status_code": {
+          "type": "integer",
+          "description": "The status code to send with the response"
+        }
+      },
+      "required": [
+        "content",
+        "status_code"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  }
+}

@@ -1,6 +1,11 @@
 import logging
-import threading
-from schedule import Schedule
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import json
+import uvicorn
+
+from reasoner import Reasoner
+from request_processor import RequestProcessor
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -8,56 +13,51 @@ logger = logging.getLogger(__name__)
 
 class Core:
 
-    def __init__(self, reasoner):
+    def __init__(self, reasoner: Reasoner, request_processor: RequestProcessor):
         self.reasoner = reasoner
-        self.schedule = Schedule()
-        self.running = True
-        self.lock = threading.Lock()
+        self.request_processor = request_processor
+        self.app = FastAPI()
+        self.app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])(self.catch_all)
 
-    def print_messages(self):
-        messages = self.reasoner.list_messages()
-        for message in reversed(messages):
-            role = message.role.capitalize()
-            content = message.content[0].text.value
-            print(f"\n## {role}")
-            print("-" * (len(role) + 3))
-            print(content)
-            print()
+    async def catch_all(self, request: Request, path_name: str):
+        json_request = await self.request_to_json(request)
+        logger.info(f"Request received: {json_request}")
+        self.process_request(json_request)
+        json_response = self.reasoner.get_answer()
+        logger.info(f"Response sent: {json_response}")
+        return JSONResponse(
+            content=json_response["content"],
+            status_code=json_response["status_code"],
+        )
 
-    def process_input(self, message_type, user_input):
-        with self.lock:
-            run = self.reasoner.send_message(message_type, user_input)
+    async def request_to_json(self, request: Request):
+        return {
+            "method": request.method,
+            "url": str(request.url),
+            "query_params": dict(request.query_params),
+            "path_params": dict(request.path_params),
+            "body": await request.json(),
+            "client": {"host": request.client.host, "port": request.client.port},
+            "headers": dict(request.headers),
+            "cookies": dict(request.cookies)
+        }
 
-            while run.required_action:
-                run = self.reasoner.handle_actions(run)
+    def process_request(self, request_json: dict):
+        request_processed = self.request_processor.process_incoming_request(request_json)
+        content = json.dumps(request_processed)
+        self.process_input(content)
 
-            if run.status == 'completed':
-                self.print_messages()
-            else:
-                logger.error("actions executed, but run is not completed")
-                self.print_messages()
+    def process_input(self, content):
+        run = self.reasoner.send_message(content)
 
-    def user_input_thread(self):
-        while self.running:
-            user_input = input("You: ")
-            if user_input == "exit":
-                self.running = False
-                break
-            self.process_input("user message", user_input)
+        while run.required_action:
+            run = self.reasoner.handle_actions(run)
 
-    def schedule_event_thread(self):
-        while self.running:
-            while self.schedule.is_next():
-                content = self.schedule.get_next()[1]
-                self.process_input("schedule event", content)
+        if run.status != 'completed':
+            logger.error("actions executed, but run is not completed")
 
     def start(self):
         try:
-            input_thread = threading.Thread(target=self.user_input_thread)
-            event_thread = threading.Thread(target=self.schedule_event_thread)
-            input_thread.start()
-            event_thread.start()
-            input_thread.join()
-            event_thread.join()
+            uvicorn.run(self.app, host="0.0.0.0", port=8000)
         finally:
             self.reasoner.close()

@@ -51,7 +51,7 @@ class APIManager:
                            (f" body: {json}" if json else "") +
                            f" Response: {response.status_code} {response.text}")
             logger.info(log_message)
-            return response.status_code, response.text
+            return {"content": response.text, "status_code": response.status_code}
         except requests.RequestException as e:
             logger.error(f"Failed to send request to {url}: {e}")
             return None, str(e)

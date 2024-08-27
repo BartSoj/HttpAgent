@@ -1,5 +1,6 @@
 import heapq
 from datetime import datetime
+from datetime import timezone
 from threading import Lock
 import logging
 
@@ -36,7 +37,7 @@ class Schedule:
     def is_next(self):
         with self._lock:
             if self.schedule:
-                current_time = datetime.now()
+                current_time = datetime.now(timezone.utc)
                 return self.schedule[0][0] < current_time
             return False
 
