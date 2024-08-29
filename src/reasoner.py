@@ -128,11 +128,10 @@ class Reasoner:
         function_arguments = json.loads(json_request)
         method = function_arguments["method"]
         url = function_arguments["url"]
-        headers = self._parse_argument_to_dict(function_arguments.get("headers"))
         params = self._parse_argument_to_dict(function_arguments.get("params"))
-        data = self._parse_argument_to_dict(function_arguments.get("data"))
+        headers = self._parse_argument_to_dict(function_arguments.get("headers"))
         body = self._parse_argument_to_dict(function_arguments.get("body"))
-        response = self.api_manager.send_request(method, url, headers, params, data, body)
+        response = self.api_manager.send_request(method, url, params, headers, body)
         return json.dumps(response)
 
     def handle_actions(self, run):

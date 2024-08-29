@@ -17,7 +17,8 @@ class Core:
         self.reasoner = reasoner
         self.request_processor = request_processor
         self.app = FastAPI()
-        self.app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])(self.catch_all)
+        self.app.api_route("/{path_name:path}", methods=["GET", "OPTIONS", "HEAD", "POST", "PUT", "PATCH", "DELETE"])(
+            self.catch_all)
 
     async def catch_all(self, request: Request, path_name: str):
         json_request = await self.request_to_json(request)
@@ -31,16 +32,22 @@ class Core:
         )
 
     async def request_to_json(self, request: Request):
-        return {
+        result = {
             "method": request.method,
-            "url": str(request.url),
-            "query_params": dict(request.query_params),
-            "path_params": dict(request.path_params),
-            "body": await request.json(),
-            "client": {"host": request.client.host, "port": request.client.port},
-            "headers": dict(request.headers),
-            "cookies": dict(request.cookies)
+            "url": str(request.base_url) + request.url.path,
         }
+
+        if request.query_params:
+            result["params"] = dict(request.query_params)
+
+        if request.headers:
+            result["headers"] = dict(request.headers)
+
+        body = await request.body()
+        if body:
+            result["body"] = json.loads(body)
+
+        return result
 
     def process_request(self, request_json: dict):
         request_processed = self.request_processor.process_incoming_request(request_json)

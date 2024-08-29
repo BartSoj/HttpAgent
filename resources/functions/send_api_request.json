@@ -10,8 +10,11 @@
           "type": "string",
           "enum": [
             "GET",
+            "OPTIONS",
+            "HEAD",
             "POST",
             "PUT",
+            "PATCH",
             "DELETE"
           ],
           "description": "The HTTP method to use"
@@ -20,17 +23,13 @@
           "type": "string",
           "description": "The URL to send the request to"
         },
-        "headers": {
-          "type": "string",
-          "description": "The headers to send with the request. It should be a json object"
-        },
         "params": {
           "type": "string",
           "description": "The query parameters to send with the request. It should be a json object"
         },
-        "data": {
+        "headers": {
           "type": "string",
-          "description": "The data to send with the request. It should be a json object"
+          "description": "HTTP Headers to send with the request. It should be a json object"
         },
         "body": {
           "type": "string",

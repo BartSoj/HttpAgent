@@ -19,15 +19,14 @@ class APIManager:
         self.auths = self.token_manager.get_auths()
         logger.info(f"Loaded {len(self.auths)} authentications")
 
-    def send_request(self, method, url, headers=None, params=None, data=None, json=None):
+    def send_request(self, method, url, params=None, headers=None, json=None):
         """
         Send an HTTP request with the given parameters.
 
         :param method: HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE')
         :param url: The URL to send the request to
-        :param headers: (optional) A dictionary of HTTP headers
         :param params: (optional) A dictionary of query parameters
-        :param data: (optional) A dictionary, list of tuples, bytes, or file-like object to send in the body
+        :param headers: (optional) A dictionary of HTTP headers
         :param json: (optional) A JSON serializable object to send in the body
         :return: A tuple containing (status_code, response_text)
         """
@@ -37,9 +36,8 @@ class APIManager:
             response = requests.request(
                 method=method,
                 url=url,
-                headers=headers,
                 params=params,
-                data=data,
+                headers=headers,
                 json=json,
                 auth=auth
             )
@@ -47,8 +45,7 @@ class APIManager:
             log_message = (f"{method} {url}" +
                            (f" Headers: {headers}" if headers else "") +
                            (f" Params: {params}" if params else "") +
-                           (f" Data: {data}" if data else "") +
-                           (f" body: {json}" if json else "") +
+                           (f" Body: {json}" if json else "") +
                            f" Response: {response.status_code} {response.text}")
             logger.info(log_message)
             return {"content": response.text, "status_code": response.status_code}
