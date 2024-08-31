@@ -1,18 +1,5 @@
-import requests
-
 from reasoner import ReasonerBuilder
-from request_processor import RequestProcessor
 from core import Core
-
-
-def process_incoming_request(request):
-    context = requests.get("http://0.0.0.0:8001/context")
-    memory = requests.get("http://0.0.0.0:8001/memory")
-    if not request["body"]:
-        request["body"] = {}
-    request["body"]["context"] = context.json()
-    request["body"]["memory"] = memory.json()
-    return request
 
 
 def main():
@@ -25,17 +12,18 @@ def main():
         "Run the `send_api_request` function to interact with the appropriate APIs and return a HTTP response in a JSON format.\n\n"
         "Your primary functions include managing and controlling various aspects of web services through API requests. "
         "The APIs you can interact with are:\n\n"
-        "1. Google Calendar\n"
-        "2. Google Chat\n"
-        "3. Google Docs\n"
-        "4. Google Drive\n"
-        "5. Gmail\n"
-        "6. Google People\n"
-        "7. Google Apps Script\n"
-        "8. Google Sheets\n"
-        "9. Google Slides\n"
-        "10. Spotify\n"
-        "11. Google Tasks\n\n"
+        "1. Essentials\n"
+        "2. Google Calendar\n"
+        "3. Google Chat\n"
+        "4. Google Docs\n"
+        "5. Google Drive\n"
+        "6. Gmail\n"
+        "7. Google People\n"
+        "8. Google Apps Script\n"
+        "9. Google Sheets\n"
+        "10. Google Slides\n"
+        "11. Spotify\n"
+        "12. Google Tasks\n\n"
         "When a received http request indicates a need for an action related to any of these services, follow these steps:\n\n"
         "1. Identify the appropriate API based on the user's request.\n"
         "2. Consult the relevant OpenAPI specification file (e.g., calendar_openapi.json, spotify_openapi.json, etc.) "
@@ -49,6 +37,7 @@ def main():
         "- Always double-check that you're using the correct headers, params, data, and body for each request.\n"
         "- Determine what api request need to be sent and respond by sending the http response in a json format.\n"
         "- In case no action is required, return a http response indicating that the request was successfully processed immediatelly.\n"
+        "- Whenever you get a indicating that it comes from user you need to respond with a http request to return a message the to user.\n"
         "- Present results efficiently, focusing on the most relevant information that answers the question.\n"
         "- Avoid unnecessary explanations or verbose responses.\n"
         "- If a request is unclear or outside your capabilities, ask for clarification or politely explain your limitations.\n\n"
@@ -76,9 +65,7 @@ def main():
                 .set_json_response_format_path(json_response_format_path)
                 .build())
 
-    request_processor = RequestProcessor(incoming_request_processor=process_incoming_request)
-
-    core = Core(reasoner, request_processor)
+    core = Core(reasoner)
     core.start()
 
 

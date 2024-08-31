@@ -22,8 +22,14 @@ class ContextManager:
         self.context["time"] = datetime.now().strftime("%H:%M:%S")
         self.context["city"] = geocoder.ip('me').city
 
-    def get_context(self):
-        return self.context
+    def get_date(self):
+        return self.context["date"]
+
+    def get_time(self):
+        return self.context["time"]
+
+    def get_city(self):
+        return self.context["city"]
 
     def close(self):
         self.stop_event.set()

@@ -1,33 +1,43 @@
+import threading
 import requests
 
 
-def print_answer(content, role):
-    print(f"\n## {role}")
-    print("-" * (len(role) + 3))
-    print(content)
-    print()
+class ConsoleChat:
 
+    def __init__(self, user_name, agent_name, agent_url):
+        self.user_name = user_name
+        self.agent_name = agent_name
+        self.agent_url = agent_url
+        self.stop_event = threading.Event()
+        self.user_input_thread = threading.Thread(target=self._run)
+        self.user_input_thread.start()
 
-def get_user_input(role):
-    print(f"\n## {role}")
-    print("-" * (len(role) + 3))
-    user_input = input()
-    print()
-    return user_input
+    def print_answer(self, content):
+        print(f"\n## {self.agent_name}")
+        print("-" * (len(self.agent_name) + 3))
+        print(content)
+        print()
 
+    def _get_user_input(self):
+        print(f"\n## {self.user_name}")
+        print("-" * (len(self.user_name) + 3))
+        user_input = input()
+        print()
+        return user_input
 
-def run(user_name, agent_name, agent_url):
-    while True:
-        user_input = get_user_input(user_name)
-        if user_input == "exit":
-            break
-        response = requests.post(agent_url, json={"content": user_input})
-        print_answer(response.text, agent_name)
+    def _run(self):
+        while not self.stop_event.is_set():
+            user_input = self._get_user_input()
+            if user_input == "exit":
+                break
+            response = requests.post(self.agent_url, json={"user_request": user_input})
 
+    def set_user_name(self, user_name):
+        self.user_name = user_name
 
-def main():
-    run("User", "Assistant", "http://localhost:8000/")
+    def set_agent_name(self, agent_name):
+        self.agent_name = agent_name
 
-
-if __name__ == "__main__":
-    main()
+    def close(self):
+        self.stop_event.set()
+        self.user_input_thread.join()

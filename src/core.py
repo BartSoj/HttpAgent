@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Core:
 
-    def __init__(self, reasoner: Reasoner, request_processor: RequestProcessor):
+    def __init__(self, reasoner: Reasoner, request_processor: RequestProcessor = RequestProcessor()):
         self.reasoner = reasoner
         self.request_processor = request_processor
         self.app = FastAPI()

@@ -7,9 +7,9 @@ from dateutil import parser
 
 class ScheduleManager:
 
-    def __init__(self, callback_url, update_interval=15):
+    def __init__(self, agent_url, update_interval=15):
         self.schedule = Schedule()
-        self.callback_url = callback_url
+        self.agent_url = agent_url
         self.update_interval = update_interval
         self.stop_event = threading.Event()
         self.update_thread = threading.Thread(target=self._update_schedule)
@@ -27,7 +27,7 @@ class ScheduleManager:
     def _on_schedule_update(self):
         while self.schedule.is_next():
             schedule_time, schedule_content = self.schedule.get_next()
-            requests.post(self.callback_url, json={"time": schedule_time.isoformat(), "content": schedule_content})
+            requests.post(self.agent_url, json={"time": schedule_time.isoformat(), "content": schedule_content})
 
     def close(self):
         self.schedule.clear()
