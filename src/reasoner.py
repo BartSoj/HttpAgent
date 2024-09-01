@@ -171,7 +171,7 @@ class Reasoner:
         )
 
         run = self.openai_client.beta.threads.runs.create_and_poll(
-            thread_id=self.thread.id, assistant_id=self.assistant.id
+            thread_id=self.thread.id, assistant_id=self.assistant.id, tool_choice={"type": "file_search"}
         )
 
         return run
@@ -190,5 +190,4 @@ class Reasoner:
 
     def close(self):
         self.openai_client.beta.assistants.delete(assistant_id=self.assistant.id)
-        self.openai_client.beta.threads.delete(thread_id=self.thread.id)
         self.api_manager.close()

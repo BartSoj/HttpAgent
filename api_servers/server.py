@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api_servers.context_service.context_manager import ContextManager
 from api_servers.memory_service.memory_manager import MemoryManager
@@ -53,7 +53,8 @@ async def get_city():
 
 
 class MemoryModel(BaseModel):
-    memory: str
+    memory: str = Field(...,
+                        description="String with the content that represents a memory and will be saved for later use in the conversation.")
 
 
 @app.post('/memory')
@@ -79,8 +80,12 @@ async def get_memory():
 
 
 class ScheduleModel(BaseModel):
-    time: str
-    content: str
+    time: str = Field(...,
+                      description="The date and time when the assistant should be invoked. The date and time should be in ISO 8601 format.",
+                      examples=["2024-08-20T16:33:14Z", "2024-09-01T12:43:00Z"])
+    content: str = Field(...,
+                         description="The content that should be sent to the assistant when it is invoked. It can inform the assistant about the action to be performed, the reminder message, the notification message, etc.",
+                         examples=["Reminder to take medicine", "Reminder me to call mom", "Wake up alarm"])
 
 
 @app.post('/schedule')
@@ -88,14 +93,14 @@ async def add_schedule(request: ScheduleModel):
     """
     Add a new schedule for later execution.
 
-    Stores the provided schedule for later execution based on content.
+    Add a schedule to invoke the assistant at a specific time with specific content. Can be used to schedule a reminder, notification, set a timer, alarm or any other time-based action.
     """
     schedule_manager.add_schedule(request.time, request.content)
     return JSONResponse(content={"status": "ok"})
 
 
 class UserMessage(BaseModel):
-    message: str
+    message: str = Field(..., description="String with the content of the message that is sent to the user")
 
 
 @app.post('/send_message_to_user')

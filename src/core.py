@@ -40,8 +40,8 @@ class Core:
         if request.query_params:
             result["params"] = dict(request.query_params)
 
-        if request.headers:
-            result["headers"] = dict(request.headers)
+        # if request.headers:
+        #     result["headers"] = dict(request.headers)
 
         body = await request.body()
         if body:

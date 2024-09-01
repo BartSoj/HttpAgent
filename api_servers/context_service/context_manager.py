@@ -2,6 +2,9 @@ from datetime import datetime
 import threading
 import time
 import geocoder
+import logging
+
+logging.getLogger("geocoder").setLevel(logging.ERROR)
 
 
 class ContextManager:

@@ -45,7 +45,7 @@ def main():
         "For detailed information about each API's capabilities, refer to the corresponding OpenAPI specification file."
     )
 
-    temperature = 0
+    temperature = 1e-6  # duo to openai api bug, temperature cannot be set to 0
 
     api_clients_path = "resources/api_clients/api_clients.json"
     api_tokens_path = "resources/api_clients/api_tokens.json"
