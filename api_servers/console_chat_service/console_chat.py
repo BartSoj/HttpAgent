@@ -1,4 +1,6 @@
 import threading
+import time
+
 import requests
 
 
@@ -26,6 +28,7 @@ class ConsoleChat:
         return user_input
 
     def _run(self):
+        time.sleep(1)
         while not self.stop_event.is_set():
             user_input = self._get_user_input()
             if user_input == "exit":

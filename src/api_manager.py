@@ -30,6 +30,12 @@ class APIManager:
         :param json: (optional) A JSON serializable object to send in the body
         :return: A tuple containing (status_code, response_text)
         """
+        log_message = (f"API Request: {method} {url}" +
+                       (f" Headers: {headers}" if headers else "") +
+                       (f" Params: {params}" if params else "") +
+                       (f" Body: {json}" if json else ""))
+        logger.info(log_message)
+
         try:
             auth_name = tldextract.extract(url).domain
             auth = self.auths.get(auth_name)
@@ -42,11 +48,7 @@ class APIManager:
                 auth=auth
             )
 
-            log_message = (f"{method} {url}" +
-                           (f" Headers: {headers}" if headers else "") +
-                           (f" Params: {params}" if params else "") +
-                           (f" Body: {json}" if json else "") +
-                           f" Response: {response.status_code} {response.text}")
+            log_message = f"API Response: {response.status_code} {response.text}"
             logger.info(log_message)
             return {"content": response.text, "status_code": response.status_code}
         except requests.RequestException as e:

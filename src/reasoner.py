@@ -131,6 +131,10 @@ class Reasoner:
         params = self._parse_argument_to_dict(function_arguments.get("params"))
         headers = self._parse_argument_to_dict(function_arguments.get("headers"))
         body = self._parse_argument_to_dict(function_arguments.get("body"))
+        if "localhost:8000" in url:
+            return json.dumps({
+                                  "content": "you cannot send the response to the same server that sent the request. Make sure to use the correct api url",
+                                  "status_code": 400})
         response = self.api_manager.send_request(method, url, params, headers, body)
         return json.dumps(response)
 
