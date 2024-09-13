@@ -1,6 +1,5 @@
 import threading
 from .schedule import Schedule
-import time
 import requests
 from dateutil import parser
 
@@ -22,7 +21,7 @@ class ScheduleManager:
     def _update_schedule(self):
         while not self.stop_event.is_set():
             self._on_schedule_update()
-            time.sleep(self.update_interval)
+            self.stop_event.wait(self.update_interval)
 
     def _on_schedule_update(self):
         while self.schedule.is_next():

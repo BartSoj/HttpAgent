@@ -56,9 +56,11 @@ class Core:
 
     def process_input(self, content):
         run = self.reasoner.send_message(content)
+        self.reasoner.show_run(run)
 
         while run.required_action:
             run = self.reasoner.handle_actions(run)
+            self.reasoner.show_run(run)
 
         if run.status != 'completed':
             logger.error("actions executed, but run is not completed")

@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -148,11 +150,15 @@ async def set_agent_name(request: AgentNameModel):
 
 def main():
     try:
-        uvicorn.run(app, host="0.0.0.0", port=8001)
+        try:
+            uvicorn.run(app, host="0.0.0.0", port=8001)
+        finally:
+            context_manager.close()
+            memory_manager.close()
+            schedule_manager.close()
+            console_chat.close()
     finally:
-        context_manager.close()
-        memory_manager.close()
-        schedule_manager.close()
+        os._exit(0)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
 from datetime import datetime
 import threading
-import time
 import geocoder
 import logging
 
@@ -18,7 +17,7 @@ class ContextManager:
     def _update_context_loop(self):
         while not self.stop_event.is_set():
             self._on_context_update()
-            time.sleep(self.update_interval)
+            self.stop_event.wait(self.update_interval)
 
     def _on_context_update(self):
         self.context["date"] = datetime.now().strftime("%d-%m-%Y")

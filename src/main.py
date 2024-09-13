@@ -19,7 +19,7 @@ def main():
     openapi_vector_store_id = "vs_eV2E9MwN7Y7FSf6Z4tYhSoql"
     json_response_format_path = "resources/response_formats/json_response.json"
 
-    reasoner = (ReasonerBuilder("API Control Assistant")
+    reasoner = (ReasonerBuilder("HttpAgent")
                 .set_model(model)
                 .set_description(description)
                 .set_instructions(instructions)

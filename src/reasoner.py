@@ -125,7 +125,13 @@ class Reasoner:
         return None
 
     def send_request_from_json(self, json_request):
-        function_arguments = json.loads(json_request)
+        try:
+            function_arguments = json.loads(json_request)
+        except json.JSONDecodeError:
+            logger.error("Failed to parse JSON API request. Request: %s", json_request)
+            return json.dumps({
+                "content": "Failed to parse JSON request.",
+                "status_code": 400})
         method = function_arguments["method"]
         url = function_arguments["url"]
         params = self._parse_argument_to_dict(function_arguments.get("params"))
@@ -133,8 +139,8 @@ class Reasoner:
         body = self._parse_argument_to_dict(function_arguments.get("body"))
         if "localhost:8000" in url:
             return json.dumps({
-                                  "content": "you cannot send the response to the same server that sent the request. Make sure to use the correct api url",
-                                  "status_code": 400})
+                "content": "you cannot send the response to the same server that sent the request. Make sure to use the correct api url",
+                "status_code": 400})
         response = self.api_manager.send_request(method, url, params, headers, body)
         return json.dumps(response)
 
@@ -167,6 +173,22 @@ class Reasoner:
 
         return run
 
+    def show_run(self, run):
+        run_steps = self.openai_client.beta.threads.runs.steps.list(
+            thread_id=self.thread.id,
+            run_id=run.id,
+            include=["step_details.tool_calls[*].file_search.results[*].content"]
+        )
+        print(f"Run ID: {run.id}")
+        for step in run_steps:
+            if step.type == "tool_calls":
+                for tool_call in step.step_details.tool_calls:
+                    if tool_call.type == "file_search":
+                        for result in tool_call.file_search.results:
+                            print(f"File ID: {result.file_id}")
+                            print(f"Content: {result.content}")
+                            print("---")
+
     def send_message(self, content):
         message = self.openai_client.beta.threads.messages.create(
             thread_id=self.thread.id,
@@ -193,5 +215,4 @@ class Reasoner:
         return json_answer
 
     def close(self):
-        self.openai_client.beta.assistants.delete(assistant_id=self.assistant.id)
         self.api_manager.close()
