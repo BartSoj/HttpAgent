@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "httpagent"
+version = "0.1.0"
+description = ""
+authors = ["Bartosz Sójka <bartsoj@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+openai = "^1.45.0"
+fastapi = "^0.114.2"
+requests = "^2.32.3"
+tldextract = "^5.1.2"
+requests-oauth2client = "^1.6.0"
+uvicorn = "^0.30.6"
+python-dateutil = "^2.9.0.post0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
