@@ -14,20 +14,22 @@ APIs included in mindAI:
 
 important APIs for integration:
 
-- weather.com
-- Tapo for light and smart devices control
-- some api to set alarms and timers
-- api to get screenshot from user's devices
-- apis to google products, these include: google maps, youtube, keep, photos, meet
-- apis to apple products, these include: health and fitness, notes, calendar, reminders
+- Wolframalpha
+- Discord
+- Notes
+- Calendar
+- Reminders
+- API for controlling a computer (e.g. via SSH)
 
 other APIs for future integration:
 
-- general: calculator, some api to make audio/video calls
-- home control: google home
-- social: linkedin, whatsapp
-- business: teams, slack, github
-- wellness: mental future or other meditation
+- apis to apple products, these include: health and fitness, notes, calendar, reminders
+- apis to google products, these include: google maps, youtube, keep, photos, meet
+- general: some api to make audio/video calls
+- home control: google home, Tapo
+- social: LinkedIn, Whatsapp
+- business: Teams, Slack, GitHub
+- wellness: Mental future or other meditation
 - education: Canvas LMS
 
 files with openapi specification can be found among other in the following pages:

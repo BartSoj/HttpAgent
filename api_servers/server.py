@@ -5,7 +5,6 @@ from fastapi.responses import JSONResponse
 import uvicorn
 from pydantic import BaseModel, Field
 
-from api_servers.context_service.context_manager import ContextManager
 from api_servers.memory_service.memory_manager import MemoryManager
 from api_servers.schedule_service.schedule_manager import ScheduleManager
 from api_servers.console_chat_service.console_chat import ConsoleChat
@@ -18,40 +17,9 @@ app = FastAPI(title="essentials",
               )
 agent_url = "http://localhost:8000/"
 
-context_manager = ContextManager()
 memory_manager = MemoryManager()
 schedule_manager = ScheduleManager(agent_url=agent_url)
 console_chat = ConsoleChat(user_name="User", agent_name="Agent", agent_url=agent_url)
-
-
-@app.get('/time')
-async def get_time():
-    """
-    Get the current time.
-
-    Returns the current time.
-    """
-    return JSONResponse(content={"time": context_manager.get_time()})
-
-
-@app.get('/date')
-async def get_date():
-    """
-    Get the current date.
-
-    Returns the current date.
-    """
-    return JSONResponse(content={"date": context_manager.get_date()})
-
-
-@app.get('/city')
-async def get_city():
-    """
-    Get the current city.
-
-    Returns the current city.
-    """
-    return JSONResponse(content={"city": context_manager.get_city()})
 
 
 class MemoryModel(BaseModel):
@@ -153,7 +121,6 @@ def main():
         try:
             uvicorn.run(app, host="0.0.0.0", port=8001)
         finally:
-            context_manager.close()
             memory_manager.close()
             schedule_manager.close()
             console_chat.close()

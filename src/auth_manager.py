@@ -122,8 +122,11 @@ class AuthManager:
             return json.load(api_clients)
 
     def _load_tokens(self):
-        with open(self.api_tokens_path, "r") as api_tokens:
-            return json.load(api_tokens)
+        try:
+            with open(self.api_tokens_path, "r") as api_tokens:
+                return json.load(api_tokens)
+        except FileNotFoundError:
+            return {}
 
     def _save_clients(self, clients):
         with open(self.api_clients_path, "w") as api_clients:
