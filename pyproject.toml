@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Bartosz Sójka <bartsoj@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "httpagent", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -14,7 +17,11 @@ tldextract = "^5.1.2"
 requests-oauth2client = "^1.6.0"
 uvicorn = "^0.30.6"
 python-dateutil = "^2.9.0.post0"
+discord = "^2.3.2"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
 
 [build-system]
 requires = ["poetry-core"]

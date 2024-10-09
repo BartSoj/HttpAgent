@@ -1,4 +1,4 @@
-from src.auth_manager import AuthManager
+from httpagent.auth_manager import AuthManager
 
 
 def main():

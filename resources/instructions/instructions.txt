@@ -19,9 +19,9 @@ Always aim to understand the intent of requests and provide helpful, accurate re
 Finish each response by sending a message to the user about actions taken or results by sending appropriate API request.
 Determine API to send messages to users based on available OpenAPI specification files.
 The APIs you can interact with are:
-- Essentials
+- Wolfram Alpha
+- Discord
 - Google Calendar
-- Google Chat
 - Google Docs
 - Google Drive
 - Gmail

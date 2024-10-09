@@ -7,10 +7,44 @@ import logging
 from datetime import timezone, datetime
 from attrs import asdict
 from binapy import BinaPy
-from requests_oauth2client import OAuth2Client, BearerTokenSerializer, OAuth2AccessTokenAuth, BearerToken
+from requests_oauth2client import OAuth2Client, BearerTokenSerializer, OAuth2AccessTokenAuth, BearerToken, IdToken
+import jwskate
+from attrs import frozen
+from typing import Any
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+@frozen(init=False)
+class CustomPrefixBearerToken(BearerToken):
+    prefix: str = "Bearer"
+
+    def __init__(
+            self,
+            access_token: str,
+            *,
+            expires_at: datetime | None = None,
+            scope: str | None = None,
+            refresh_token: str | None = None,
+            token_type: str = BearerToken.TOKEN_TYPE,
+            id_token: str | bytes | IdToken | jwskate.JweCompact | None = None,
+            prefix: str = "Bearer",
+            **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            access_token=access_token,
+            expires_at=expires_at,
+            scope=scope,
+            refresh_token=refresh_token,
+            token_type=token_type,
+            id_token=id_token,
+            **kwargs
+        )
+        object.__setattr__(self, 'prefix', prefix)
+
+    def authorization_header(self) -> str:
+        return f"{self.prefix} {self.access_token}"
 
 
 class CallbackHandler(http.server.SimpleHTTPRequestHandler):
@@ -51,12 +85,12 @@ class AuthManager:
         self._save_tokens(tokens)
         logger.info("All clients have been authorized.")
 
-    def add_client_token_manually(self, name, access_token, refresh_token=None, expires_at=None):
+    def add_client_token_manually(self, name, access_token, **params):
         clients = self._load_clients()
         tokens = self._load_tokens()
         for client in clients:
             if client["name"] == name:
-                token = BearerToken(access_token, refresh_token=refresh_token, expires_at=expires_at)
+                token = CustomPrefixBearerToken(access_token, **params)
                 tokens[client["name"]] = self._serialize_token(token)
                 logger.info(f"Client {name} has been authorized.")
                 break
@@ -86,13 +120,24 @@ class AuthManager:
 
     def _retrieve_token(self, client, httpd):
         auth_client = self._create_auth_client(client)
-        az_request = auth_client.authorization_request(scope=client["scope"], access_type="offline")
+        az_request = self._create_authorization_request(client, auth_client)
         logger.info(f"Please authorize {client['name']} client. A browser window will open automatically.")
         response_uri = self._get_authorization_code(az_request.uri, httpd)
         az_response = az_request.validate_callback(response_uri)
         token = auth_client.authorization_code(az_response)
         logger.info(f"Token for {client['name']} has been retrieved.")
         return self._serialize_token(token)
+
+    def _create_authorization_request(self, client, auth_client):
+        params = {
+            "scope": client["scope"],
+            "access_type": "offline",
+        }
+
+        if "request_params" in client and isinstance(client["request_params"], dict):
+            params.update(client["request_params"])
+
+        return auth_client.authorization_request(**params)
 
     def _get_authorization_code(self, auth_url, httpd):
         httpd.callback_uri = None
@@ -107,11 +152,11 @@ class AuthManager:
 
     def _create_auth_client(self, client_json):
         return OAuth2Client(
-            token_endpoint=client_json["token_endpoint"],
-            authorization_endpoint=client_json["authorization_endpoint"],
+            token_endpoint=client_json.get("token_endpoint"),
+            authorization_endpoint=client_json.get("authorization_endpoint"),
             redirect_uri=f"http://localhost:{self.port}/callback",
-            client_id=client_json["client_id"],
-            client_secret=client_json["client_secret"]
+            client_id=client_json.get("client_id"),
+            client_secret=client_json.get("client_secret")
         )
 
     def _create_bearer_token(self, token_json):
@@ -119,7 +164,13 @@ class AuthManager:
 
     def _load_clients(self):
         with open(self.api_clients_path, "r") as api_clients:
-            return json.load(api_clients)
+            clients = json.load(api_clients)
+            for client in clients:
+                if not "name" in client:
+                    raise ValueError("Client name is missing.")
+                if not "client_id" in client:
+                    raise ValueError("Client ID is missing.")
+            return clients
 
     def _load_tokens(self):
         try:
@@ -145,7 +196,7 @@ class AuthManager:
         token_dict = {key: val for key, val in d.items() if val is not None}
         return BinaPy.serialize_to("json", token_dict).to("deflate").to("b64u").ascii()
 
-    def _token_loader(self, serialized, token_class=BearerToken):
+    def _token_loader(self, serialized, token_class=CustomPrefixBearerToken):
         attrs = BinaPy(serialized).decode_from("b64u").decode_from("deflate").parse_from("json")
         expires_at = attrs.get("expires_at")
         if expires_at:

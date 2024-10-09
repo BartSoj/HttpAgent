@@ -14,5 +14,14 @@
     "client_secret": "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",
     "scope": "https://mail.google.com/ https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/chat https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/script.external_request https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/presentations",
     "name": "googleapis"
+  },
+  {
+    "client_id": "1291857502555607123",
+    "client_secret": "Vp6CD5T3AiovYS_RfAQg6DPvRcRxga52",
+    "name": "discord"
+  },
+  {
+    "client_id": "HttpAssistant",
+    "name": "wolframalpha"
   }
 ]

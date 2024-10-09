@@ -1,5 +1,5 @@
 import os
-from src.openai_client import OpenAIClient
+from httpagent.openai_client import OpenAIClient
 
 
 def get_or_create_vector_store(client, vector_store_name):
@@ -26,7 +26,7 @@ def upload_api_references(client):
     vector_store = get_or_create_vector_store(client, vector_store_name)
 
     existing_files = get_existing_files(client, vector_store.id)
-    file_dir = "../../resources/apis"
+    file_dir = "../resources/apis"
     local_files = set(os.listdir(file_dir))
 
     new_files = local_files - existing_files
