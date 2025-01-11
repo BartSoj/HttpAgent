@@ -1,0 +1,30 @@
+{
+  "type": "function",
+  "function": {
+    "name": "retrieve_api_info",
+    "description": "retrieve the API information for the action to execute, this function should always be called twice, once without operation_id and after that again with operation_id",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "api_name": {
+          "type": "string",
+          "enum": [
+            "Wolfram Alpha",
+            "Discord",
+            "Google Calendar",
+            "Google Tasks",
+            "Spotify"
+          ],
+          "description": "The name of the API to retrieve the information for"
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "The operation id for the API endpoint to retrieve the information for. Leave empty to list all possible operations (call again with chosen operation_id immediately after to get information about it)."
+        }
+      },
+      "required": [
+        "api_name"
+      ]
+    }
+  }
+}
