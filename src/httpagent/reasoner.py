@@ -1,4 +1,6 @@
 import json
+
+from httpagent.openapi_manager import OpenapiManager
 from openai_client import OpenAIClient
 import logging
 
@@ -18,6 +20,8 @@ class ReasonerBuilder:
         self.api_clients_path = None
         self.api_tokens_path = None
         self.send_api_request_function_path = None
+        self.retrieve_api_info_function_path = None
+        self.openapi_file_paths = None
         self.openapi_vector_store_id = None
         self.json_response_format_path = None
 
@@ -49,6 +53,14 @@ class ReasonerBuilder:
         self.send_api_request_function_path = send_api_request_function_path
         return self
 
+    def set_retrieve_api_info_function_path(self, retrieve_api_info_function_path):
+        self.retrieve_api_info_function_path = retrieve_api_info_function_path
+        return self
+
+    def set_openapi_file_paths(self, openapi_file_paths):
+        self.openapi_file_paths = openapi_file_paths
+        return self
+
     def set_openapi_vector_store_id(self, openapi_vector_store_id):
         self.openapi_vector_store_id = openapi_vector_store_id
         return self
@@ -66,6 +78,8 @@ class ReasonerBuilder:
                         self.api_clients_path,
                         self.api_tokens_path,
                         self.send_api_request_function_path,
+                        self.retrieve_api_info_function_path,
+                        self.openapi_file_paths,
                         self.openapi_vector_store_id,
                         self.json_response_format_path)
 
@@ -79,6 +93,8 @@ class Reasoner:
                  api_clients_path=None,
                  api_tokens_path=None,
                  send_api_request_function_path=None,
+                 retrieve_api_info_function_path=None,
+                 openapi_file_paths=None,
                  openapi_vector_store_id=None,
                  json_response_format_path=None):
 
@@ -86,6 +102,7 @@ class Reasoner:
 
         self.name = name
         self.api_manager = APIManager(api_clients_path, api_tokens_path)
+        self.openapi_manager = OpenapiManager(openapi_file_paths)
 
         tools = []
         tools_resources = {}
@@ -94,6 +111,10 @@ class Reasoner:
             file_search = {"type": "file_search"}
             tools.append(file_search)
             tools_resources["file_search"] = {"vector_store_ids": [openapi_vector_store_id]}
+
+        if openapi_file_paths:
+            functions = [json.load(open(retrieve_api_info_function_path))]
+            tools.extend(functions)
 
         if send_api_request_function_path:
             functions = [json.load(open(send_api_request_function_path))]
@@ -110,7 +131,8 @@ class Reasoner:
             description=description,
             instructions=instructions,
             temperature=temperature,
-            # response_format=json_response_format,  # TODO: response_format is not supported together with file_search, uncomment when OpenAI API supports it
+            response_format=json_response_format,
+            # TODO: response_format is not supported together with file_search, remove when using file_search
             tools=tools,
             tool_resources=tools_resources,
         )
@@ -125,6 +147,9 @@ class Reasoner:
         return None
 
     def send_request_from_json(self, json_request):
+        logger.info(
+            "Sending request to API: %s",
+            json_request)
         try:
             function_arguments = json.loads(json_request)
         except json.JSONDecodeError:
@@ -144,12 +169,33 @@ class Reasoner:
         response = self.api_manager.send_request(method, url, params, headers, body)
         return json.dumps(response)
 
+    def retrieve_info_from_json(self, json_spec):
+        logger.info("Retrieving info from API: %s", json_spec)
+        try:
+            function_arguments = json.loads(json_spec)
+        except json.JSONDecodeError:
+            logger.error("Failed to parse JSON specification: %s", json_spec)
+            return "Failed to parse JSON specification."
+        api_name = function_arguments["api_name"]
+        operation_id = function_arguments.get("operation_id")
+        if operation_id:
+            return json.dumps(self.openapi_manager.get_operation_by_id(api_name, operation_id))
+        return json.dumps(self.openapi_manager.get_operation_ids_and_summaries(api_name))
+
     def handle_actions(self, run):
         tool_outputs = []
 
         for tool in run.required_action.submit_tool_outputs.tool_calls:
             if tool.function.name == "send_api_request":
                 response = self.send_request_from_json(tool.function.arguments)
+                tool_outputs.append(
+                    {
+                        "tool_call_id": tool.id,
+                        "output": response
+                    }
+                )
+            elif tool.function.name == "retrieve_api_info":
+                response = self.retrieve_info_from_json(tool.function.arguments)
                 tool_outputs.append(
                     {
                         "tool_call_id": tool.id,
@@ -197,7 +243,8 @@ class Reasoner:
         )
 
         run = self.openai_client.beta.threads.runs.create_and_poll(
-            thread_id=self.thread.id, assistant_id=self.assistant.id, tool_choice={"type": "file_search"}
+            thread_id=self.thread.id, assistant_id=self.assistant.id,
+            tool_choice={"type": "file_search"} if {"type": "file_search"} in self.assistant.tools else None
         )
 
         return run
@@ -208,10 +255,9 @@ class Reasoner:
 
     def get_answer(self):
         answer = list(self.openai_client.beta.threads.messages.list(thread_id=self.thread.id))[0]
-        # json_answer = json.loads(answer.content[0].text.value)  # TODO: response_format is not supported together with file_search, uncomment when OpenAI API supports it
-        # json_answer["content"] = self._parse_argument_to_dict(json_answer["content"])
-        content = answer.content[0].text.value
-        json_answer = {"content": content, "status_code": 200}
+        json_answer = json.loads(answer.content[
+                                     0].text.value)  # TODO: response_format is not supported together with file_search, remove when using file_search
+        json_answer["content"] = self._parse_argument_to_dict(json_answer["content"])
         return json_answer
 
     def close(self):

@@ -16,7 +16,17 @@ def main():
     api_tokens_path = "resources/api_clients/api_tokens.json"
 
     send_api_request_function_path = "resources/functions/send_api_request.json"
-    openapi_vector_store_id = "vs_eV2E9MwN7Y7FSf6Z4tYhSoql"
+
+    retrieve_api_info_function_path = "resources/functions/retrieve_api_info.json"
+
+    openapi_file_paths = {"wolframalpha": "resources/apis/wolfram_openapi.json",
+                          "discord": "resources/apis/discord_openapi.json",
+                          "calendar": "resources/apis/calendar_openapi.json",
+                          "tasks": "resources/apis/tasks_openapi.json",
+                          "spotify": "resources/apis/spotify_openapi.json"}
+
+    # openapi_vector_store_id = "vs_eV2E9MwN7Y7FSf6Z4tYhSoql"  # You can use vector store with openapi files instead of openapi manager
+
     json_response_format_path = "resources/response_formats/json_response.json"
 
     reasoner = (ReasonerBuilder("HttpAgent")
@@ -27,7 +37,9 @@ def main():
                 .set_api_clients_path(api_clients_path)
                 .set_api_tokens_path(api_tokens_path)
                 .set_send_api_request_function_path(send_api_request_function_path)
-                .set_openapi_vector_store_id(openapi_vector_store_id)
+                .set_retrieve_api_info_function_path(retrieve_api_info_function_path)
+                .set_openapi_file_paths(openapi_file_paths)
+                # .set_openapi_vector_store_id(openapi_vector_store_id)  # For using vector store with openapi files
                 .set_json_response_format_path(json_response_format_path)
                 .build())
 
