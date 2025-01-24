@@ -1,5 +1,5 @@
 import unittest
-from src.functionReasoner.functionReasoner import FunctionReasoner
+from src.reasoners.functionReasoner.functionReasoner import FunctionReasoner
 
 
 class FunctionReasonerTest(unittest.TestCase):

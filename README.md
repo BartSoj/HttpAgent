@@ -78,7 +78,7 @@ export OPENAI_API_KEY=your_openai_api_key
 
 1. **Start the HTTP Agent**:
    ```bash
-   python src/httpagent/main.py
+   python src/agents.httpAgent/main.py
    ```  
 2. **Start API Servers for Interaction**:
    ```bash

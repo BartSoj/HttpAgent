@@ -1,5 +1,5 @@
 import unittest
-from httpagent.openapi_manager import OpenapiManager
+from src.agents.httpAgent.openapi_manager import OpenapiManager
 
 
 class OpenapiManagerTest(unittest.TestCase):
