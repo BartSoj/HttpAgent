@@ -1,7 +1,7 @@
 import json
 
 from httpagent.openapi_manager import OpenapiManager
-from openai_client import OpenAIClient
+from utils.openai_client import OpenAIClient
 import logging
 
 from api_manager import APIManager

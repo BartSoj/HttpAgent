@@ -1,5 +1,5 @@
 import os
-from httpagent.openai_client import OpenAIClient
+from utils.openai_client import OpenAIClient
 
 
 def get_or_create_vector_store(client, vector_store_name):
