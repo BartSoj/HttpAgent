@@ -1,5 +1,5 @@
-from reasoner import ReasonerBuilder
-from core import Core
+from src.agents.httpAgent.reasoner import ReasonerBuilder
+from src.agents.httpAgent.httpagent import HttpAgent
 
 
 def main():
@@ -43,8 +43,8 @@ def main():
                 .set_json_response_format_path(json_response_format_path)
                 .build())
 
-    core = Core(reasoner)
-    core.start()
+    http_agent = HttpAgent(reasoner)
+    http_agent.start()
 
 
 if __name__ == "__main__":

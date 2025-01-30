@@ -1,15 +1,17 @@
 import json
 
+from reasoners.generic_reasoner import GenericReasoner
 from utils.openai_client import OpenAIClient
 
 
-class FunctionReasoner:
+class FunctionReasoner(GenericReasoner):
     def __init__(self,
-                 model="gpt-4o-mini",
-                 system="",
+                 model: str = "gpt-4o-mini",
+                 system: str = "",
                  temperature: int = None,
                  function_spec_paths: list[str] = None,
                  functions: dict = None):
+        super().__init__()
         self.openai_client = OpenAIClient().get_client()
         self.model = model
         self.system = system

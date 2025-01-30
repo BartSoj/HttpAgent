@@ -1,0 +1,19 @@
+{
+  "type": "function",
+  "function": {
+    "name": "executeUserRequest",
+    "description": "Process the user request to retrieve or perform the requested action.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action_description": {
+          "type": "string",
+          "description": "A string that describes the specific user request to be processed. This parameter provides context and details necessary to execute the action or retrieve the requested information."
+        }
+      },
+      "required": [
+        "action_description"
+      ]
+    }
+  }
+}

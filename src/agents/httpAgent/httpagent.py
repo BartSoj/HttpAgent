@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-class Core:
+class HttpAgent:
 
     def __init__(self, reasoner: Reasoner, request_processor: RequestProcessor = RequestProcessor()):
         self.reasoner = reasoner
