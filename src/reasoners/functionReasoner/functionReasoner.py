@@ -28,6 +28,18 @@ class FunctionReasoner(GenericReasoner):
             self.tools = function_specs
 
     def process_request(self, request):
+        """
+        Tries to execute the request, if executes responds based on response result, otherwise responds why request not executed.
+        1. prompt the model with request
+        2. checks if function call required
+        3. if api call required, executes the function
+        3.1. updates the request with function result
+        3.2. goes to step 1.
+        4. if api call not required, returns model response
+
+        :param request: text explaining the request to execute
+        :return: text response about request execution
+        """
         messages = [
             {
                 "role": "system",
