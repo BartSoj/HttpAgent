@@ -25,14 +25,14 @@ class OpenApiReasoner(GenericReasoner):
         self.openapi_manager = openapi_manager
         self.request_manager = request_manager
 
-    def _parse_argument_to_dict(self, request_argument):
+    def __parse_argument_to_dict(self, request_argument):
         if request_argument and isinstance(request_argument, dict):
             return request_argument
         if request_argument and isinstance(request_argument, str) and request_argument.startswith("{"):
             return json.loads(request_argument)
         return None
 
-    def send_request_from_json(self, json_request):
+    def __send_request_from_json(self, json_request):
         logger.info(
             "Sending request to API: %s",
             json_request)
@@ -45,14 +45,14 @@ class OpenApiReasoner(GenericReasoner):
                 "status_code": 400})
         method = function_arguments["method"]
         url = function_arguments["url"]
-        params = self._parse_argument_to_dict(function_arguments.get("params"))
-        headers = self._parse_argument_to_dict(function_arguments.get("headers"))
-        body = self._parse_argument_to_dict(function_arguments.get("body"))
+        params = self.__parse_argument_to_dict(function_arguments.get("params"))
+        headers = self.__parse_argument_to_dict(function_arguments.get("headers"))
+        body = self.__parse_argument_to_dict(function_arguments.get("body"))
         response = self.request_manager.send_request(method, url, params, headers, body)
         return json.dumps(response)
 
     # TODO: split into two distinct functions
-    def retrieve_info_from_json(self, json_spec):
+    def __retrieve_info_from_json(self, json_spec):
         logger.info("Retrieving info from API: %s", json_spec)
         try:
             function_arguments = json.loads(json_spec)
@@ -118,7 +118,7 @@ class OpenApiReasoner(GenericReasoner):
             if name != self.openapi_manager.get_function_name():
                 raise Exception(f"Unexpected tool call: {name}")
 
-            result = self.retrieve_info_from_json(args)
+            result = self.__retrieve_info_from_json(args)
 
             messages.append({
                 "role": "tool",
@@ -153,7 +153,7 @@ class OpenApiReasoner(GenericReasoner):
             if name != self.request_manager.get_function_name():
                 raise Exception(f"Unexpected tool call: {name}")
 
-            result = self.send_request_from_json(args)
+            result = self.__send_request_from_json(args)
 
             messages.append({
                 "role": "tool",

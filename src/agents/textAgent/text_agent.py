@@ -5,7 +5,6 @@ from agents.generic_agent import GenericAgent
 from reasoners.generic_reasoner import GenericReasoner
 from utils.openai_client import OpenAIClient
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
@@ -48,6 +47,18 @@ class TextAgent(GenericAgent):
             print(f"Bot: {chat_response}")
 
     def __get_chat_response(self, messages):
+        """
+        Gives chat response to the provided messages, using reasoner to execute actions when required.
+        1. prompt the model with the messages
+        2. checks if reasoner action required
+        3. if reasoner action required, executes action using reasoner
+        3.1 updates the messages with reasoner action result
+        3.2 goes to step 1.
+        4. if reasoner action not required, returns model response
+
+        :param messages: List of messages between user and assistant
+        :return: Response to the last message from the assistant
+        """
         while True:
             response = self.openai_client.chat.completions.create(
                 model=self.model,

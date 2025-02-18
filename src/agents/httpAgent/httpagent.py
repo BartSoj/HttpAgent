@@ -4,27 +4,48 @@ from fastapi.responses import JSONResponse
 import json
 import uvicorn
 
-from reasoner import Reasoner
+from agents.generic_agent import GenericAgent
+from reasoners.generic_reasoner import GenericReasoner
 from request_processor import RequestProcessor
+from utils.openai_client import OpenAIClient
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-class HttpAgent:
+class HttpAgent(GenericAgent):
 
-    def __init__(self, reasoner: Reasoner, request_processor: RequestProcessor = RequestProcessor()):
-        self.reasoner = reasoner
+    def __init__(self,
+                 model: str = "gpt-4o",
+                 system: str = "",
+                 temperature: int = None,
+                 reasoner: GenericReasoner = None,
+                 request_action_function_path: str = None,
+                 request_processor: RequestProcessor = RequestProcessor()):
+        super().__init__(reasoner)
+        self.openai_client = OpenAIClient().get_client()
+        self.model = model
+        self.system = system
+        self.temperature = temperature
+        request_action_function = self.__parse_function_path(request_action_function_path)
+        self.tools = [request_action_function]
+        self.request_action_function_name = request_action_function["function"]["name"]
         self.request_processor = request_processor
         self.app = FastAPI()
         self.app.api_route("/{path_name:path}", methods=["GET", "OPTIONS", "HEAD", "POST", "PUT", "PATCH", "DELETE"])(
             self.catch_all)
 
+    def __parse_function_path(self, function_path) -> dict:
+        with open(function_path) as file:
+            function = json.load(file)
+        if not function or function["type"] != "function":
+            raise Exception("Function not found")
+        return function
+
     async def catch_all(self, request: Request, path_name: str):
         json_request = await self.request_to_json(request)
         logger.info(f"Request received: {json_request}")
-        self.process_request(json_request)
-        json_response = self.reasoner.get_answer()
+        preprocessed_request = self.preprocess_request(json_request)
+        json_response = self.__get_chat_response(preprocessed_request)
         logger.info(f"Response sent: {json_response}")
         return JSONResponse(
             content=json_response["content"],
@@ -49,24 +70,69 @@ class HttpAgent:
 
         return result
 
-    def process_request(self, request_json: dict):
+    def preprocess_request(self, request_json: dict):
         request_processed = self.request_processor.process_incoming_request(request_json)
-        content = json.dumps(request_processed)
-        self.process_input(content)
+        return json.dumps(request_processed)
 
-    def process_input(self, content):
-        run = self.reasoner.send_message(content)
-        self.reasoner.show_run(run)
+    def __get_chat_response(self, request_message):
+        """
+        Gives chat response to the provided messages, using reasoner to execute actions when required.
+        1. prompt the model with the messages
+        2. checks if reasoner action required
+        3. if reasoner action required, executes action using reasoner
+        3.1 updates the messages with reasoner action result
+        3.2 goes to step 1.
+        4. if reasoner action not required, returns model response
 
-        while run.required_action:
-            run = self.reasoner.handle_actions(run)
-            self.reasoner.show_run(run)
+        :param request_message: Message with the server request
+        :return: Response to the last message from the assistant
+        """
+        messages = [
+            {
+                "role": "developer",
+                "content": self.system
+            },
+            {
+                "role": "user",
+                "content": request_message
+            }
+        ]
 
-        if run.status != 'completed':
-            logger.error("actions executed, but run is not completed")
+        while True:
+            response = self.openai_client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                messages=messages,
+                parallel_tool_calls=False,
+                tools=self.tools
+            )
+
+            finish_reason = response.choices[0].finish_reason
+            if finish_reason == "stop":
+                break
+            if finish_reason != "tool_calls":
+                raise Exception(f"Unexpected finish reason: {finish_reason}")
+
+            messages.append(response.choices[0].message)  # append model's function call message
+
+            for tool_call in response.choices[0].message.tool_calls:
+                name = tool_call.function.name
+                args = json.loads(tool_call.function.arguments)
+
+                result = self.__call_function(name, args)
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": result
+                })
+
+        return response.choices[0].message.content
+
+    def __call_function(self, name, args):
+        if name != self.request_action_function_name:
+            raise Exception(f"Unknown function: {name}")
+        return self.reasoner.process_request(args.get("action_description"))
 
     def start(self):
-        try:
-            uvicorn.run(self.app, host="0.0.0.0", port=8000)
-        finally:
-            self.reasoner.close()
+        uvicorn.run(self.app, host="0.0.0.0", port=8000)
