@@ -126,6 +126,8 @@ class OpenApiReasoner(GenericReasoner):
                 "content": result
             })
 
+
+            # get the http request details and send the request
             response = self.openai_client.chat.completions.create(
                 model=self.model,
                 reasoning_effort="medium",
