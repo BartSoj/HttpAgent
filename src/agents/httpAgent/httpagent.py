@@ -12,6 +12,11 @@ from utils.openai_client import OpenAIClient
 logger = logging.getLogger(__name__)
 
 
+class HttpResponseFormat:
+    content: str
+    status_code: int
+
+
 class HttpAgent(GenericAgent):
 
     def __init__(self,
@@ -45,11 +50,11 @@ class HttpAgent(GenericAgent):
         json_request = await self.request_to_json(request)
         logger.info(f"Request received: {json_request}")
         preprocessed_request = self.preprocess_request(json_request)
-        json_response = self.__get_chat_response(preprocessed_request)
-        logger.info(f"Response sent: {json_response}")
+        http_response = self.__get_chat_response(preprocessed_request)
+        logger.info(f"Response sent: status {http_response.status_code} {http_response.content}")
         return JSONResponse(
-            content=json_response["content"],
-            status_code=json_response["status_code"],
+            content=http_response.content,
+            status_code=http_response.status_code,
         )
 
     async def request_to_json(self, request: Request):
@@ -74,7 +79,7 @@ class HttpAgent(GenericAgent):
         request_processed = self.request_processor.process_incoming_request(request_json)
         return json.dumps(request_processed)
 
-    def __get_chat_response(self, request_message):
+    def __get_chat_response(self, request_message) -> HttpResponseFormat:
         """
         Gives chat response to the provided messages, using reasoner to execute actions when required.
         1. prompt the model with the messages
@@ -104,7 +109,8 @@ class HttpAgent(GenericAgent):
                 temperature=self.temperature,
                 messages=messages,
                 parallel_tool_calls=False,
-                tools=self.tools
+                tools=self.tools,
+                response_format=HttpResponseFormat
             )
 
             finish_reason = response.choices[0].finish_reason
@@ -127,7 +133,7 @@ class HttpAgent(GenericAgent):
                     "content": result
                 })
 
-        return response.choices[0].message.content
+        return response.choices[0].message.parsed
 
     def __call_function(self, name, args):
         if name != self.request_action_function_name:
