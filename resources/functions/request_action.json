@@ -1,7 +1,7 @@
 {
   "type": "function",
   "function": {
-    "name": "executeUserRequest",
+    "name": "execute_user_request",
     "description": "Process the user request to retrieve or perform the requested action.",
     "parameters": {
       "type": "object",

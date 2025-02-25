@@ -1,0 +1,19 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_operation",
+    "description": "retrieve the API information for the action to execute",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "The operation id for the API endpoint to retrieve the information for."
+        }
+      },
+      "required": [
+        "operation_id"
+      ]
+    }
+  }
+}

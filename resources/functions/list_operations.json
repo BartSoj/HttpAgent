@@ -1,0 +1,26 @@
+{
+  "type": "function",
+  "function": {
+    "name": "list_operations",
+    "description": "retrieve the API information for the action to execute",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "api_name": {
+          "type": "string",
+          "enum": [
+            "Wolfram Alpha",
+            "Discord",
+            "Google Calendar",
+            "Google Tasks",
+            "Spotify"
+          ],
+          "description": "The name of the API to retrieve the information for"
+        }
+      },
+      "required": [
+        "api_name"
+      ]
+    }
+  }
+}

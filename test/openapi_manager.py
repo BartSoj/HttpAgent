@@ -11,7 +11,7 @@ class OpenapiManagerTest(unittest.TestCase):
     openapi_manager = OpenapiManager(openapi_file_paths)
 
     def test_get_operation_ids_and_summaries(self):
-        operation_ids_and_summaries = self.openapi_manager.get_operation_ids_and_summaries("spotify")
+        operation_ids_and_summaries = self.openapi_manager.list_operation_ids_and_summaries("spotify")
         print(operation_ids_and_summaries)
 
     def test_get_operation_by_id(self):
