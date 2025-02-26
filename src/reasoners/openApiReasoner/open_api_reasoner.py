@@ -117,7 +117,7 @@ class OpenApiReasoner(GenericReasoner):
                 temperature=self.temperature,
                 messages=self.messages,
                 parallel_tool_calls=False,
-                tools=[self.openapi_manager.list_operations_function_schema()]
+                tools=[self.openapi_manager.list_operations_function_schema]
             )
 
             finish_reason = response.choices[0].finish_reason
@@ -171,7 +171,7 @@ class OpenApiReasoner(GenericReasoner):
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
 
-            if name != self.openapi_manager.get_operation_function_name():
+            if name != self.openapi_manager.get_operation_function_name:
                 raise Exception(f"Unexpected tool call: {name}")
 
             result = self._get_operation_from_json(args)
@@ -189,7 +189,7 @@ class OpenApiReasoner(GenericReasoner):
                 temperature=self.temperature,
                 messages=self.messages,
                 parallel_tool_calls=False,
-                tools=[self.request_manager.get_function_schema()]
+                tools=[self.request_manager.function_schema]
             )
 
             finish_reason = response.choices[0].finish_reason
@@ -207,7 +207,7 @@ class OpenApiReasoner(GenericReasoner):
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
 
-            if name != self.request_manager.get_function_name():
+            if name != self.request_manager.function_name:
                 raise Exception(f"Unexpected tool call: {name}")
 
             result = self._send_request_from_json(args)

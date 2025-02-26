@@ -3,12 +3,14 @@ import jsonref
 
 
 class OpenapiManager:
-    def __init__(self, list_operations_function_name, get_operation_function_name, list_operations_function_schema,
-                 get_operation_function_schema, openapi_files: Dict[str, str]):
-        self.list_operations_function_name = list_operations_function_name
-        self.get_operation_function_name = get_operation_function_name
+    def __init__(self,
+                 list_operations_function_schema: dict,
+                 get_operation_function_schema: dict,
+                 openapi_files: Dict[str, str]):
         self.list_operations_function_schema = list_operations_function_schema
         self.get_operation_function_schema = get_operation_function_schema
+        self.list_operations_function_name = list_operations_function_schema["function"]["name"]
+        self.get_operation_function_name = get_operation_function_schema["function"]["name"]
 
         self.openapi_files = openapi_files
 

@@ -14,22 +14,14 @@ class TextAgent(GenericAgent):
                  instructions: str = "",
                  temperature: int = None,
                  reasoner: GenericReasoner = None,
-                 request_action_function_path: str = None):
+                 request_action_function_schema: dict = None):
         super().__init__(reasoner)
         self.openai_client = OpenAIClient().get_client()
         self.model = model
         self.instructions = instructions
         self.temperature = temperature
-        request_action_function = self.__parse_function_path(request_action_function_path)
-        self.tools = [request_action_function]
-        self.request_action_function_name = request_action_function["function"]["name"]
-
-    def __parse_function_path(self, function_path) -> dict:
-        with open(function_path) as file:
-            function = json.load(file)
-        if not function or function["type"] != "function":
-            raise Exception("Function not found")
-        return function
+        self.request_action_function_schema = request_action_function_schema
+        self.request_action_function_name = request_action_function_schema["function"]["name"]
 
     def start(self):
         messages = [{
@@ -42,14 +34,14 @@ class TextAgent(GenericAgent):
                 "role": "user",
                 "content": user_reqeust
             })
-            chat_response = self.__get_chat_response(messages)
+            chat_response = self._get_chat_response(messages)
             messages.append({
                 "role": "assistant",
                 "content": chat_response
             })
             print(f"Bot: {chat_response}")
 
-    def __get_chat_response(self, messages):
+    def _get_chat_response(self, messages):
         """
         Gives chat response to the provided messages, using reasoner to execute actions when required.
         1. prompt the model with the messages
@@ -68,7 +60,7 @@ class TextAgent(GenericAgent):
                 temperature=self.temperature,
                 messages=messages,
                 parallel_tool_calls=False,
-                tools=self.tools
+                tools=[self.request_action_function_schema]
             )
 
             finish_reason = response.choices[0].finish_reason
@@ -83,7 +75,7 @@ class TextAgent(GenericAgent):
                 name = tool_call.function.name
                 args = json.loads(tool_call.function.arguments)
 
-                result = self.__call_function(name, args)
+                result = self._call_function(name, args)
 
                 messages.append({
                     "role": "tool",
@@ -93,7 +85,7 @@ class TextAgent(GenericAgent):
 
         return response.choices[0].message.content
 
-    def __call_function(self, name, args):
+    def _call_function(self, name, args):
         if name != self.request_action_function_name:
             raise Exception(f"Unknown function: {name}")
         return self.reasoner.process_request(args.get("action_description"))

@@ -1,21 +1,20 @@
 import requests
 import logging
 import tldextract
-from auth_manager import AuthManager
+
+from reasoners.openApiReasoner.auth_manager import AuthManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class RequestManager:
-    def __init__(self, function_name, function_schema, api_clients_path, api_tokens_path):
-        self.function_name = function_name
+    def __init__(self, function_schema: dict, token_manager: AuthManager):
         self.function_schema = function_schema
+        self.function_name = function_schema["function"]["name"]
         self.auths = {}
-        self.token_manager = None
-        if api_clients_path and api_tokens_path:
-            self.token_manager = AuthManager(api_clients_path, api_tokens_path)
-            self._load_auths()
+        self.token_manager = token_manager
+        self._load_auths()
 
     def _load_auths(self):
         self.auths = self.token_manager.get_auths()
@@ -56,12 +55,6 @@ class RequestManager:
         except requests.RequestException as e:
             logger.error(f"Failed to send request to {url}: {e}")
             return None, str(e)
-
-    def get_function_schema(self):
-        return self.function_schema
-
-    def get_function_name(self):
-        return self.function_name
 
     def close(self):
         if self.token_manager:

@@ -24,27 +24,19 @@ class HttpAgent(GenericAgent):
                  instructions: str = "",
                  temperature: int = None,
                  reasoner: GenericReasoner = None,
-                 request_action_function_path: str = None,
+                 request_action_function_schema: dict = None,
                  request_processor: RequestProcessor = RequestProcessor()):
         super().__init__(reasoner)
         self.openai_client = OpenAIClient().get_client()
         self.model = model
         self.instructions = instructions
         self.temperature = temperature
-        request_action_function = self.__parse_function_path(request_action_function_path)
-        self.tools = [request_action_function]
-        self.request_action_function_name = request_action_function["function"]["name"]
+        self.request_action_function_schema = request_action_function_schema
+        self.request_action_function_name = request_action_function_schema["function"]["name"]
         self.request_processor = request_processor
         self.app = FastAPI()
         self.app.api_route("/{path_name:path}", methods=["GET", "OPTIONS", "HEAD", "POST", "PUT", "PATCH", "DELETE"])(
             self.catch_all)
-
-    def __parse_function_path(self, function_path) -> dict:
-        with open(function_path) as file:
-            function = json.load(file)
-        if not function or function["type"] != "function":
-            raise Exception("Function not found")
-        return function
 
     async def catch_all(self, request: Request, path_name: str):
         json_request = await self.request_to_json(request)
@@ -109,7 +101,7 @@ class HttpAgent(GenericAgent):
                 temperature=self.temperature,
                 messages=messages,
                 parallel_tool_calls=False,
-                tools=self.tools,
+                tools=[self.request_action_function_schema],
                 response_format=HttpResponseFormat
             )
 
