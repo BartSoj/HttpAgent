@@ -7,14 +7,14 @@ from utils.openai_client import OpenAIClient
 class FunctionReasoner(GenericReasoner):
     def __init__(self,
                  model: str = "gpt-4o-mini",
-                 system: str = "",
+                 instructions: str = "",
                  temperature: int = None,
                  function_spec_paths: list[str] = None,
                  functions: dict = None):
         super().__init__()
         self.openai_client = OpenAIClient().get_client()
         self.model = model
-        self.system = system
+        self.instructions = instructions
         self.temperature = temperature
         self.functions = functions
 
@@ -42,8 +42,8 @@ class FunctionReasoner(GenericReasoner):
         """
         messages = [
             {
-                "role": "system",
-                "content": self.system
+                "role": "developer",
+                "content": self.instructions
             },
             {
                 "role": "user",

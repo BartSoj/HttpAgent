@@ -21,7 +21,7 @@ class HttpAgent(GenericAgent):
 
     def __init__(self,
                  model: str = "gpt-4o",
-                 system: str = "",
+                 instructions: str = "",
                  temperature: int = None,
                  reasoner: GenericReasoner = None,
                  request_action_function_path: str = None,
@@ -29,7 +29,7 @@ class HttpAgent(GenericAgent):
         super().__init__(reasoner)
         self.openai_client = OpenAIClient().get_client()
         self.model = model
-        self.system = system
+        self.instructions = instructions
         self.temperature = temperature
         request_action_function = self.__parse_function_path(request_action_function_path)
         self.tools = [request_action_function]
@@ -95,7 +95,7 @@ class HttpAgent(GenericAgent):
         messages = [
             {
                 "role": "developer",
-                "content": self.system
+                "content": self.instructions
             },
             {
                 "role": "user",

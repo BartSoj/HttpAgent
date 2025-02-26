@@ -10,17 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class OpenApiReasoner(GenericReasoner):
-    # TODO: there are multiple prompts so single model, system and temperature might not suffice
+    # TODO: there are multiple prompts so single model, instructions and temperature might not suffice
     def __init__(self,
                  model: str = "gpt-o3-mini",
-                 system: str = "",
+                 instructions: str = "",
                  temperature: int = None,
                  openapi_manager: OpenapiManager = None,
                  request_manager: RequestManager = None):
         super().__init__()
         self.openai_client = OpenAIClient().get_client()
         self.model = model
-        self.system = system
+        self.instructions = instructions
         self.temperature = temperature
         self.openapi_manager = openapi_manager
         self.request_manager = request_manager
@@ -33,7 +33,7 @@ class OpenApiReasoner(GenericReasoner):
         self.messages = [
             {
                 "role": "developer",
-                "content": self.system
+                "content": self.instructions
             }
         ]
         self.api_name_choice = None
