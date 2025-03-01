@@ -1,4 +1,5 @@
 .idea
 mindAI.iml
+.env
 
 resources/api_clients/api_tokens.json

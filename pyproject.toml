@@ -23,6 +23,7 @@ uvicorn = "^0.30.6"
 python-dateutil = "^2.9.0.post0"
 discord = "^2.3.2"
 jsonref = "^1.1.0"
+python-dotenv = "^1.0.1"
 
 
 [tool.poetry.group.dev.dependencies]

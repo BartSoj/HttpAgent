@@ -3,6 +3,7 @@
   "function": {
     "name": "send_api_request",
     "description": "send the API request to get execute an action",
+    "strict": true,
     "parameters": {
       "type": "object",
       "properties": {
@@ -39,7 +40,8 @@
       "required": [
         "method",
         "url"
-      ]
+      ],
+      "additionalProperties": false
     }
   }
 }

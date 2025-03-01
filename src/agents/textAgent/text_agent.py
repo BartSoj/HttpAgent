@@ -24,12 +24,17 @@ class TextAgent(GenericAgent):
         self.request_action_function_name = request_action_function_schema["function"]["name"]
 
     def start(self):
+        print("Chat with the assistant. Type 'exit' to stop.")
         messages = [{
             "role": "developer",
             "content": self.instructions
         }]
         while True:
             user_reqeust = input("You: ")
+            if user_reqeust == "exit":
+                logger.info("User requested exit.")
+                break
+            logger.info(f"User request: {user_reqeust}")
             messages.append({
                 "role": "user",
                 "content": user_reqeust
@@ -40,6 +45,7 @@ class TextAgent(GenericAgent):
                 "content": chat_response
             })
             print(f"Bot: {chat_response}")
+            logger.info(f"Chat response: {chat_response}")
 
     def _get_chat_response(self, messages):
         """
@@ -88,4 +94,5 @@ class TextAgent(GenericAgent):
     def _call_function(self, name, args):
         if name != self.request_action_function_name:
             raise Exception(f"Unknown function: {name}")
-        return self.reasoner.process_request(args.get("action_description"))
+        return self.reasoner.process_request(args.get(
+            "action_description"))  # TODO: on one hand we allow to change the function, but here we assume it always has "action_description" argument

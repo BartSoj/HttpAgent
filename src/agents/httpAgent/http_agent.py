@@ -3,16 +3,17 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import json
 import uvicorn
+from pydantic import BaseModel
 
 from agents.generic_agent import GenericAgent
 from reasoners.generic_reasoner import GenericReasoner
-from request_processor import RequestProcessor
+from agents.httpAgent.request_processor import RequestProcessor
 from utils.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 
 
-class HttpResponseFormat:
+class HttpResponseFormat(BaseModel):
     content: str
     status_code: int
 
@@ -37,8 +38,15 @@ class HttpAgent(GenericAgent):
         self.app = FastAPI()
         self.app.api_route("/{path_name:path}", methods=["GET", "OPTIONS", "HEAD", "POST", "PUT", "PATCH", "DELETE"])(
             self.catch_all)
+        self.server = None
 
     async def catch_all(self, request: Request, path_name: str):
+        if path_name == "exit":
+            logger.info("Shutdown requested via /exit endpoint.")
+            if self.server:
+                self.server.should_exit = True
+            return JSONResponse(content="Server is shutting down", status_code=200)
+
         json_request = await self.request_to_json(request)
         logger.info(f"Request received: {json_request}")
         preprocessed_request = self.preprocess_request(json_request)
@@ -52,7 +60,7 @@ class HttpAgent(GenericAgent):
     async def request_to_json(self, request: Request):
         result = {
             "method": request.method,
-            "url": str(request.base_url) + request.url.path,
+            "url": request.url.path,
         }
 
         if request.query_params:
@@ -96,7 +104,7 @@ class HttpAgent(GenericAgent):
         ]
 
         while True:
-            response = self.openai_client.chat.completions.create(
+            response = self.openai_client.beta.chat.completions.parse(
                 model=self.model,
                 temperature=self.temperature,
                 messages=messages,
@@ -133,4 +141,6 @@ class HttpAgent(GenericAgent):
         return self.reasoner.process_request(args.get("action_description"))
 
     def start(self):
-        uvicorn.run(self.app, host="0.0.0.0", port=8000)
+        config = uvicorn.Config(self.app, host="0.0.0.0", port=8000, log_level="info")
+        self.server = uvicorn.Server(config)
+        self.server.run()

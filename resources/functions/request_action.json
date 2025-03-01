@@ -1,19 +1,21 @@
 {
   "type": "function",
   "function": {
-    "name": "execute_user_request",
-    "description": "Process the user request to retrieve or perform the requested action.",
+    "name": "execute_action_request",
+    "description": "Passes a structured action request to an external system/agent for execution based on the user's intent.",
+    "strict": true,
     "parameters": {
       "type": "object",
       "properties": {
         "action_description": {
           "type": "string",
-          "description": "A string that describes the specific user request to be processed. This parameter provides context and details necessary to execute the action or retrieve the requested information."
+          "description": "A concise description of the action to be executed, including any relevant details or context from the user's request required to execute the action or retrieve the requested information."
         }
       },
       "required": [
         "action_description"
-      ]
+      ],
+      "additionalProperties": false
     }
   }
 }
