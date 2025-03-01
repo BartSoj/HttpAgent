@@ -1,7 +1,10 @@
 import json
+import logging
 
 from reasoners.generic_reasoner import GenericReasoner
 from utils.openai_client import OpenAIClient
+
+logger = logging.getLogger(__name__)
 
 
 class FunctionReasoner(GenericReasoner):
@@ -28,6 +31,7 @@ class FunctionReasoner(GenericReasoner):
             self.tools = function_specs
 
     def process_request(self, request):
+        logger.info(f"Function reasoner request: {request}")
         """
         Tries to execute the request, if executes responds based on response result, otherwise responds why request not executed.
         1. prompt the model with request
@@ -71,7 +75,9 @@ class FunctionReasoner(GenericReasoner):
                 name = tool_call.function.name
                 args = json.loads(tool_call.function.arguments)
 
+                logger.info(f"Calling function: {name} with args: {args}")
                 result = self.call_function(name, args)
+                logger.info(f"Function result: {result}")
 
                 messages.append({
                     "role": "tool",
@@ -79,10 +85,10 @@ class FunctionReasoner(GenericReasoner):
                     "content": result
                 })
 
+        logger.info(f"Function reasoner response: {response.choices[0].message.content}")
         return response.choices[0].message.content
 
     def call_function(self, name, args):
-        if name in self.functions.keys():
-            return str(self.functions[name](**args))
-        else:
-            return f"Function {name} not found."
+        if name not in self.functions.keys():
+            raise Exception(f"Unknown function: {name}")
+        return str(self.functions[name](**args))

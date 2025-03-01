@@ -2,7 +2,7 @@
   "type": "function",
   "function": {
     "name": "list_operations",
-    "description": "retrieve the API information for the action to execute",
+    "description": "Retrieve the API information for the action to execute",
     "strict": true,
     "parameters": {
       "type": "object",

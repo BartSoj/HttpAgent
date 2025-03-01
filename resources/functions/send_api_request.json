@@ -2,7 +2,7 @@
   "type": "function",
   "function": {
     "name": "send_api_request",
-    "description": "send the API request to get execute an action",
+    "description": "Send the API request to execute an action",
     "strict": true,
     "parameters": {
       "type": "object",
@@ -26,20 +26,23 @@
         },
         "params": {
           "type": "string",
-          "description": "The query parameters to send with the request. It should be a json object"
+          "description": "The query parameters to send with the request. It should be a JSON object"
         },
         "headers": {
           "type": "string",
-          "description": "HTTP Headers to send with the request. It should be a json object"
+          "description": "HTTP Headers to send with the request. It should be a JSON object"
         },
         "body": {
           "type": "string",
-          "description": "The body to send with the request. It should be a json object"
+          "description": "The body to send with the request. It should be a JSON object"
         }
       },
       "required": [
         "method",
-        "url"
+        "url",
+        "params",
+        "headers",
+        "body"
       ],
       "additionalProperties": false
     }

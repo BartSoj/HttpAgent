@@ -3,25 +3,23 @@ import logging
 
 from reasoners.generic_reasoner import GenericReasoner
 from utils.openai_client import OpenAIClient
-from openapi_manager import OpenapiManager
-from request_manager import RequestManager
+from reasoners.openApiReasoner.openapi_manager import OpenapiManager
+from reasoners.openApiReasoner.request_manager import RequestManager
 
 logger = logging.getLogger(__name__)
 
 
 class OpenApiReasoner(GenericReasoner):
-    # TODO: there are multiple prompts so single model, instructions and temperature might not suffice
+    # TODO: there are multiple prompts so single model, instructions might not suffice
     def __init__(self,
-                 model: str = "gpt-o3-mini",
+                 model: str = "o3-mini",
                  instructions: str = "",
-                 temperature: int = None,
                  openapi_manager: OpenapiManager = None,
                  request_manager: RequestManager = None):
         super().__init__()
         self.openai_client = OpenAIClient().get_client()
         self.model = model
         self.instructions = instructions
-        self.temperature = temperature
         self.openapi_manager = openapi_manager
         self.request_manager = request_manager
 
@@ -66,7 +64,7 @@ class OpenApiReasoner(GenericReasoner):
         return json.dumps(response)
 
     def _list_operations_from_json(self, json_spec):
-        logger.info("Retrieving info from API: %s", json_spec)
+        logger.info("Retrieving operations list from API: %s", json_spec)
         try:
             function_arguments = json.loads(json_spec)
         except json.JSONDecodeError:
@@ -76,7 +74,7 @@ class OpenApiReasoner(GenericReasoner):
         return json.dumps(self.openapi_manager.list_operation_ids_and_summaries(self.api_name_choice))
 
     def _get_operation_from_json(self, json_spec):
-        logger.info("Retrieving info from API: %s", json_spec)
+        logger.info("Retrieving operation details from API: %s", json_spec)
         try:
             function_arguments = json.loads(json_spec)
         except json.JSONDecodeError:
@@ -87,7 +85,9 @@ class OpenApiReasoner(GenericReasoner):
             raise Exception("API name or operation id not set.")
         return json.dumps(self.openapi_manager.get_operation_by_id(self.api_name_choice, operation_id))
 
-    def process_request(self, request):
+    def process_request(self,
+                        request):  # TODO: use structured output instead of function calling for finding the api request
+        logger.info("OpenApi Reasoner request: %s", request)
         """
         Tries to execute the request, if executes responds based on response result, otherwise responds why request not executed.
         1. prompt the model with request
@@ -114,9 +114,7 @@ class OpenApiReasoner(GenericReasoner):
             response = self.openai_client.chat.completions.create(
                 model=self.model,
                 reasoning_effort="medium",
-                temperature=self.temperature,
                 messages=self.messages,
-                parallel_tool_calls=False,
                 tools=[self.openapi_manager.list_operations_function_schema]
             )
 
@@ -133,7 +131,7 @@ class OpenApiReasoner(GenericReasoner):
 
             tool_call = response.choices[0].message.tool_calls[0]
             name = tool_call.function.name
-            args = json.loads(tool_call.function.arguments)
+            args = tool_call.function.arguments
 
             if name != self.openapi_manager.list_operations_function_name:
                 raise Exception(f"Unexpected tool call: {name}")
@@ -150,10 +148,8 @@ class OpenApiReasoner(GenericReasoner):
             response = self.openai_client.chat.completions.create(
                 model=self.model,
                 reasoning_effort="medium",
-                temperature=self.temperature,
                 messages=self.messages,
-                parallel_tool_calls=False,
-                tools=[self.openapi_manager.get_operation_function_name]
+                tools=[self.openapi_manager.get_operation_function_schema]
             )
 
             finish_reason = response.choices[0].finish_reason
@@ -169,7 +165,7 @@ class OpenApiReasoner(GenericReasoner):
 
             tool_call = response.choices[0].message.tool_calls[0]
             name = tool_call.function.name
-            args = json.loads(tool_call.function.arguments)
+            args = tool_call.function.arguments
 
             if name != self.openapi_manager.get_operation_function_name:
                 raise Exception(f"Unexpected tool call: {name}")
@@ -186,9 +182,7 @@ class OpenApiReasoner(GenericReasoner):
             response = self.openai_client.chat.completions.create(
                 model=self.model,
                 reasoning_effort="medium",
-                temperature=self.temperature,
                 messages=self.messages,
-                parallel_tool_calls=False,
                 tools=[self.request_manager.function_schema]
             )
 
@@ -205,7 +199,7 @@ class OpenApiReasoner(GenericReasoner):
 
             tool_call = response.choices[0].message.tool_calls[0]
             name = tool_call.function.name
-            args = json.loads(tool_call.function.arguments)
+            args = tool_call.function.arguments
 
             if name != self.request_manager.function_name:
                 raise Exception(f"Unexpected tool call: {name}")
@@ -218,4 +212,5 @@ class OpenApiReasoner(GenericReasoner):
                 "content": result
             })
 
+        logger.info("OpenApi Reasoner response: %s", response.choices[0].message.content)
         return response.choices[0].message.content

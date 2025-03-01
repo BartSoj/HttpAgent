@@ -15,6 +15,7 @@
       "get": {
         "summary": "Get a result from Wolfram|Alpha",
         "description": "Retrieves a single plain text result from Wolfram|Alpha based on the input query.",
+        "operationId": "get-result",
         "parameters": [
           {
             "name": "i",

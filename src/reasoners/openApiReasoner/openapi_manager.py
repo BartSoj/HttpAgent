@@ -18,10 +18,10 @@ class OpenapiManager:
         """
         Retrieves a list of dictionaries containing 'operationId' and 'summary'.
         """
-        file_path = self.openapi_files.get(api_name.lower())
+        file_path = self.openapi_files.get(api_name.replace(" ", "").lower())
 
         if not file_path:
-            return []
+            raise ValueError(f'API {api_name} not found')
 
         with open(file_path, 'r') as f:
             api_json = jsonref.load(f)
@@ -49,7 +49,7 @@ class OpenapiManager:
         """
         Retrieves details of a path method, given an operationId.
         """
-        file_path = self.openapi_files.get(api_name.lower())
+        file_path = self.openapi_files.get(api_name.replace(" ", "").lower())
 
         if not file_path:
             return None
