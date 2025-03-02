@@ -86,7 +86,7 @@ class OpenApiReasoner(GenericReasoner):
         return json.dumps(self.openapi_manager.get_operation_by_id(self.api_name_choice, operation_id))
 
     def process_request(self,
-                        request):  # TODO: use structured output instead of function calling for finding the api request
+                        request):  # TODO: allow for changing mind and calling the function again, asking for more data, or calling another reasoner for a subtask
         logger.info("OpenApi Reasoner request: %s", request)
         """
         Tries to execute the request, if executes responds based on response result, otherwise responds why request not executed.

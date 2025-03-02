@@ -36,13 +36,18 @@ class OpenApiReasonerTest(unittest.TestCase):
     def setUp(self):
         with open("../../../resources/instructions/openapi_reasoner_instructions_v1.txt", "r") as file:
             instructions = file.read()
+        self.openapi_manager = self.create_openapi_manager()
+        self.request_manager = self.create_request_manager()
         self.openapi_reasoner = OpenApiReasoner(
             instructions=instructions,
-            openapi_manager=self.create_openapi_manager(),
-            request_manager=self.create_request_manager()
+            openapi_manager=self.openapi_manager,
+            request_manager=self.request_manager,
         )
 
     def test_openapi_reasoner(self):
-        request = "give distance from Amsterdam to Eindhoven"
+        request = "give distance from Amsterdam to Eindhoven in km"
         response = self.openapi_reasoner.process_request(request)
         self.assertIn("111", response)
+
+    def tearDown(self):
+        self.request_manager.close()

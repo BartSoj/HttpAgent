@@ -26,7 +26,7 @@
         },
         "params": {
           "type": "string",
-          "description": "The query parameters to send with the request. It should be a JSON object"
+          "description": "The query parameters to send with the request. It should be a JSON object. For example, if you wanted to pass key1=value1&key2=value2, you would pass {\"key1\":\"value1\",\"key2\":\"value2\"}"
         },
         "headers": {
           "type": "string",

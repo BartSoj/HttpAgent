@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class TextAgent(GenericAgent):
     def __init__(self,
-                 model: str = "gpt-4o-mini",
+                 model: str = "gpt-4o",
                  instructions: str = "",
                  temperature: int = None,
                  reasoner: GenericReasoner = None,

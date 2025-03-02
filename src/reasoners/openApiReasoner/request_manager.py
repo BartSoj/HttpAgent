@@ -54,7 +54,7 @@ class RequestManager:
             return {"content": response.text, "status_code": response.status_code}
         except requests.RequestException as e:
             logger.error(f"Failed to send request to {url}: {e}")
-            return None, str(e)
+            return {"content": {"error": str(e)}, "status_code": 500}
 
     def close(self):
         if self.token_manager:

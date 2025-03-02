@@ -24,7 +24,7 @@ class OpenapiManager:
             raise ValueError(f'API {api_name} not found')
 
         with open(file_path, 'r') as f:
-            api_json = jsonref.load(f)
+            api_json = jsonref.JsonRef.replace_refs(jsonref.load(f))
 
         valid_methods = {"get", "options", "head", "post", "put", "patch", "delete"}
         operation_list = []
@@ -52,10 +52,10 @@ class OpenapiManager:
         file_path = self.openapi_files.get(api_name.replace(" ", "").lower())
 
         if not file_path:
-            return None
+            raise ValueError(f'API {api_name} not found')
 
         with open(file_path, 'r') as f:
-            api_json = jsonref.load(f)
+            api_json = jsonref.JsonRef.replace_refs(jsonref.load(f))
 
         valid_methods = {"get", "options", "head", "post", "put", "patch", "delete"}
         servers = api_json.get('servers', [])
@@ -80,4 +80,4 @@ class OpenapiManager:
                         "details": filtered_details
                     }
 
-        return None
+        raise ValueError(f'OperationId not found for {api_name} {operation_id}')

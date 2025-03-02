@@ -57,6 +57,8 @@ def main():
     )
     http_agent.start()
 
+    request_manager.close()
+
 
 if __name__ == "__main__":
     main()
