@@ -1,6 +1,6 @@
 import json
 
-from agents.httpAgent.http_agent import HttpAgent
+from agents.textAgent.text_agent import TextAgent
 from reasoners.openApiReasoner.auth_manager import AuthManager
 from reasoners.openApiReasoner.open_api_reasoner import OpenApiReasoner
 from reasoners.openApiReasoner.openapi_manager import OpenapiManager
@@ -46,16 +46,17 @@ def main():
         request_manager=request_manager
     )
 
-    with open("../../resources/instructions/http_agent_instructions_v1.txt", "r") as file:
+    with open("../../resources/instructions/text_agent_instructions_v1.txt", "r") as file:
         agent_instructions = file.read()
     with open("../../resources/functions/request_action.json") as file:
         request_action_function_schema = json.load(file)
-    http_agent = HttpAgent(
+
+    text_agent = TextAgent(
         instructions=agent_instructions,
         reasoner=openapi_reasoner,
         request_action_function_schema=request_action_function_schema
     )
-    http_agent.start()
+    text_agent.start()
 
 
 if __name__ == "__main__":
