@@ -1,9 +1,9 @@
-from httpagent.auth_manager import AuthManager
+from reasoners.openApiReasoner.auth_manager import AuthManager
 
 
 def main():
-    token_manager = AuthManager(api_clients_path="resources/api_clients/api_clients.json",
-                                api_tokens_path="resources/api_clients/api_tokens.json")
+    token_manager = AuthManager(api_clients_path="../resources/api_clients/api_clients.json",
+                                api_tokens_path="../resources/api_clients/api_tokens.json")
     name = input("Enter the name of the client: ")
     access_token = input("Enter the access token: ")
     refresh_token = input("Enter the refresh token or leave empty to skip: ")
