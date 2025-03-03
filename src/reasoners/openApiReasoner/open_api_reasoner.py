@@ -37,10 +37,24 @@ class OpenApiReasoner(GenericReasoner):
         self.api_name_choice = None
 
     def _parse_argument_to_dict(self, arg):
-        if arg and isinstance(arg, dict):
+        if isinstance(arg, dict) and arg:
             return arg
-        if arg and isinstance(arg, str) and arg.startswith("{"):
-            return json.loads(arg)
+
+        if isinstance(arg, str):
+            try:
+                parsed = json.loads(arg)
+                if isinstance(parsed, dict) and parsed:
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+
+        try:
+            parsed = dict(arg)
+            if parsed:
+                return parsed
+        except Exception:
+            pass
+
         return None
 
     def _send_request_from_json(self, json_request):
@@ -71,7 +85,8 @@ class OpenApiReasoner(GenericReasoner):
             logger.error("Failed to parse JSON specification: %s", json_spec)
             return "Failed to parse JSON specification."
         self.api_name_choice = function_arguments["api_name"]
-        return json.dumps(self.openapi_manager.list_operation_ids_and_summaries(self.api_name_choice))
+        return json.dumps(self.openapi_manager.list_operation_ids_and_summaries(self.api_name_choice),
+                          default=dict)  # default=dict is necessary as some objects are JsonRef which needs to be converted to dict otherwise they are not serializable
 
     def _get_operation_from_json(self, json_spec):
         logger.info("Retrieving operation details from API: %s", json_spec)
@@ -83,7 +98,7 @@ class OpenApiReasoner(GenericReasoner):
         operation_id = function_arguments.get("operation_id")
         if not self.api_name_choice or not operation_id:
             raise Exception("API name or operation id not set.")
-        return json.dumps(self.openapi_manager.get_operation_by_id(self.api_name_choice, operation_id))
+        return json.dumps(self.openapi_manager.get_operation_by_id(self.api_name_choice, operation_id), default=dict)
 
     def process_request(self,
                         request):  # TODO: allow for changing mind and calling the function again, asking for more data, or calling another reasoner for a subtask

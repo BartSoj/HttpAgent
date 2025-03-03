@@ -24,7 +24,7 @@ class OpenapiManager:
             raise ValueError(f'API {api_name} not found')
 
         with open(file_path, 'r') as f:
-            api_json = jsonref.JsonRef.replace_refs(jsonref.load(f))
+            api_json = jsonref.load(f)
 
         valid_methods = {"get", "options", "head", "post", "put", "patch", "delete"}
         operation_list = []
@@ -39,11 +39,38 @@ class OpenapiManager:
                         summary = details.get('description', '')
 
                     if operation_id:
-                        operation_list.append({"operationId": operation_id, "summary": summary})
+                        operation_list.append({operation_id: summary})
                     else:
                         raise ValueError(f'OperationId not found for {path} {method}')
 
         return operation_list
+
+    def list_operation_ids(self, api_name: str) -> List[str]:
+        """
+        Retrieves a list of operation IDs.
+        """
+        file_path = self.openapi_files.get(api_name.replace(" ", "").lower())
+
+        if not file_path:
+            raise ValueError(f'API {api_name} not found')
+
+        with open(file_path, 'r') as f:
+            api_json = jsonref.load(f)
+
+        valid_methods = {"get", "options", "head", "post", "put", "patch", "delete"}
+        operation_ids = []
+        paths = api_json.get('paths', {})
+
+        for path, methods in paths.items():
+            for method, details in methods.items():
+                if method.lower() in valid_methods:
+                    operation_id = details.get('operationId')
+                    if operation_id:
+                        operation_ids.append(operation_id)
+                    else:
+                        raise ValueError(f'OperationId not found for {path} {method}')
+
+        return operation_ids
 
     def get_operation_by_id(self, api_name: str, operation_id: str) -> Optional[Dict]:
         """
@@ -55,7 +82,7 @@ class OpenapiManager:
             raise ValueError(f'API {api_name} not found')
 
         with open(file_path, 'r') as f:
-            api_json = jsonref.JsonRef.replace_refs(jsonref.load(f))
+            api_json = jsonref.load(f)
 
         valid_methods = {"get", "options", "head", "post", "put", "patch", "delete"}
         servers = api_json.get('servers', [])
@@ -64,20 +91,31 @@ class OpenapiManager:
         paths = api_json.get('paths', {})
 
         for path, methods in paths.items():
+            path_parameters = methods.get("parameters", [])
+
             for method, details in methods.items():
                 if method.lower() in valid_methods and details.get('operationId') == operation_id:
                     full_path = f"{server_url}{path}"
 
-                    filtered_details = {
-                        key: details[key]
-                        for key in ["operationId", "parameters", "requestBody"]
-                        if key in details
+                    method_parameters = details.get("parameters", [])
+                    parameters = list({p["name"]: p for p in path_parameters + method_parameters}.values())
+
+                    request_body = details.get('requestBody', None)
+                    if request_body:
+                        content = request_body.get('content', {})
+                        if 'application/json' in content:
+                            request_body = {"content": {"application/json": content['application/json']}}
+                        else:
+                            request_body = None
+
+                    operation_details = {
+                        "path": full_path,
+                        "method": method,
+                        "operationId": operation_id,
+                        "parameters": parameters,
+                        "requestBody": request_body
                     }
 
-                    return {
-                        "path": full_path,
-                        "method": method.upper(),
-                        "details": filtered_details
-                    }
+                    return {k: v for k, v in operation_details.items() if v is not None}
 
         raise ValueError(f'OperationId not found for {api_name} {operation_id}')

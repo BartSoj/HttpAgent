@@ -3,3 +3,4 @@ mindAI.iml
 .env
 
 resources/api_clients/api_tokens.json
+resources/api_clients/api_clients.json

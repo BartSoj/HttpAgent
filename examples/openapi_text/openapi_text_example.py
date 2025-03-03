@@ -28,8 +28,8 @@ def create_openapi_manager():
     openapi_file_paths = {
         "wolframalpha": "../../resources/apis/wolfram_openapi.json",
         "discord": "../../resources/apis/discord_openapi.json",
-        "calendar": "../../resources/apis/calendar_openapi.json",
-        "tasks": "../../resources/apis/tasks_openapi.json",
+        "googlecalendar": "../../resources/apis/calendar_openapi.json",
+        "googletasks": "../../resources/apis/tasks_openapi.json",
         "spotify": "../../resources/apis/spotify_openapi.json"
     }
     return OpenapiManager(list_operations_function_schema, get_operation_function_schema, openapi_file_paths)

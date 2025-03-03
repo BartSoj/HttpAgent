@@ -77,7 +77,7 @@ class HttpAgent(GenericAgent):
 
     def preprocess_request(self, request_json: dict):
         request_processed = self.request_processor.process_incoming_request(request_json)
-        return json.dumps(request_processed)
+        return json.dumps(request_processed, indent=2)
 
     def __get_chat_response(self, request_message) -> HttpResponseFormat:
         """
