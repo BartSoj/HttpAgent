@@ -26,8 +26,9 @@ class TestRequestManager(unittest.TestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(result["status_code"], 200)
         # Verify the response content includes the sent parameters.
-        self.assertIn("value1", result["content"])
-        self.assertIn("value2", result["content"])
+        self.assertIn("args", result["content"])
+        self.assertEqual(result["content"]["args"].get("param1"), "value1")
+        self.assertEqual(result["content"]["args"].get("param2"), "value2")
 
     def test_post_request(self):
         # Test POST request with JSON body.
@@ -38,7 +39,8 @@ class TestRequestManager(unittest.TestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(result["status_code"], 200)
         # The response should contain the JSON we sent.
-        self.assertIn('"key": "value"', result["content"])
+        self.assertIn("json", result["content"])
+        self.assertEqual(result["content"]["json"], json_body)
 
     def test_put_request(self):
         # Test PUT request with JSON body.
@@ -47,7 +49,8 @@ class TestRequestManager(unittest.TestCase):
         result = self.req_manager.send_request("PUT", url, json=json_body)
         self.assertIsInstance(result, dict)
         self.assertEqual(result["status_code"], 200)
-        self.assertIn('"update": "data"', result["content"])
+        self.assertIn("json", result["content"])
+        self.assertEqual(result["content"]["json"], json_body)
 
     def test_delete_request(self):
         # Test DELETE request.
@@ -57,6 +60,7 @@ class TestRequestManager(unittest.TestCase):
         self.assertEqual(result["status_code"], 200)
         # Check that the response includes an indicator of the URL.
         self.assertIn("url", result["content"])
+        self.assertEqual(result["content"]["url"], url)
 
     def test_404_response(self):
         # Test a request that returns a 404 status.
@@ -83,8 +87,15 @@ class TestRequestManager(unittest.TestCase):
         result = self.req_manager.send_request("GET", url, params=params)
         self.assertIsInstance(result, dict)
         self.assertEqual(result["status_code"], 200)
-        # The response should contain the album url.
-        self.assertIn("https://open.spotify.com/album/2xO5zlCGNyap7Jx1ED3HgG", result["content"])
+        # Check that the response contains the album URL.
+        self.assertIn("albums", result["content"])
+        albums = result["content"]["albums"]
+        self.assertIn("items", albums)
+        self.assertGreater(len(albums["items"]), 0)
+        album = albums["items"][0]
+        self.assertIn("external_urls", album)
+        self.assertEqual(album["external_urls"].get("spotify"),
+                         "https://open.spotify.com/album/2xO5zlCGNyap7Jx1ED3HgG")
 
     def tearDown(self):
         self.req_manager.close()
